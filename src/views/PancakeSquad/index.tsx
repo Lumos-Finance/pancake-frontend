@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import { useWeb3React } from '@web3-react/core'
 import nftSaleAbi from 'config/abi/nftSale.json'
 import { useProfile } from 'state/profile/hooks'

@@ -1,11 +1,11 @@
-import { useRef, useState, useEffect } from 'react'
+import React, { useRef, useState, useEffect } from 'react'
 import { Modal, Flex, Button, Text, Skeleton, Box } from '@pancakeswap/uikit'
 import styled from 'styled-components'
 import { useTranslation } from 'contexts/Localization'
-import FlippersShare from '../pngs/mobox-flippers-share.png'
-import StormShare from '../pngs/mobox-storm-share.png'
-import CakersShare from '../pngs/mobox-cakers-share.png'
-import ProfileMask from '../pngs/mobox-share-profile-mask.png'
+import FlippersShare from '../pngs/flippers-share.png'
+import StormShare from '../pngs/storm-share.png'
+import CakersShare from '../pngs/cakers-share.png'
+import ProfileMask from '../pngs/share-profile-mask.png'
 import MedalGold from '../pngs/medals/medal-gold.png'
 import MedalSilver from '../pngs/medals/medal-silver.png'
 import MedalBronze from '../pngs/medals/medal-bronze.png'
@@ -61,30 +61,28 @@ const ShareImageModal: React.FC<YourScoreProps> = ({ onDismiss, profile, userLea
   }
 
   useEffect(() => {
-    if (profile) {
-      const bgImages = [StormShare.src, FlippersShare.src, CakersShare.src]
-      const bgImagEl = new Image()
-      bgImagEl.src = bgImages[profile.teamId - 1]
-      bgImagEl.onload = () => setBgImage(bgImagEl)
+    const bgImages = [StormShare, FlippersShare, CakersShare]
+    const bgImagEl = new Image()
+    bgImagEl.src = bgImages[profile.teamId - 1]
+    bgImagEl.onload = () => setBgImage(bgImagEl)
 
-      const profileImageEl = new Image()
-      profileImageEl.src = `${profile.nft?.image?.thumbnail}?d=${new Date().getTime()}`
-      profileImageEl.crossOrigin = 'Anonymous'
-      profileImageEl.onload = () => setProfileImage(profileImageEl)
+    const profileImageEl = new Image()
+    profileImageEl.src = `${profile.nft?.image?.thumbnail}?d=${new Date().getTime()}`
+    profileImageEl.crossOrigin = 'Anonymous'
+    profileImageEl.onload = () => setProfileImage(profileImageEl)
 
-      const profileImageOverlayEl = new Image()
-      profileImageOverlayEl.src = ProfileMask.src
-      profileImageOverlayEl.onload = () => setProfileOverlayImage(profileImageOverlayEl)
+    const profileImageOverlayEl = new Image()
+    profileImageOverlayEl.src = ProfileMask
+    profileImageOverlayEl.onload = () => setProfileOverlayImage(profileImageOverlayEl)
 
-      const medalImageEl = new Image()
-      medalImageEl.src = getMedal(team).src
-      medalImageEl.onload = () => setMedalImage(medalImageEl)
-    }
+    const medalImageEl = new Image()
+    medalImageEl.src = getMedal(team)
+    medalImageEl.onload = () => setMedalImage(medalImageEl)
   }, [profile, team])
 
   useEffect(() => {
     const canvasEl = canvas.current
-    if (profile && canvasEl && bgImage && profileImage && profileOverlayImage && medalImage) {
+    if (canvasEl && bgImage && profileImage && profileOverlayImage && medalImage) {
       const canvasWidth = canvasEl.width
       canvasEl.height = canvasWidth * 0.5625
       const canvasHeight = canvasEl.height

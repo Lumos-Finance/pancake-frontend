@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import React, { useState } from 'react'
 import styled from 'styled-components'
 import { Text, PancakeToggle, Toggle, Flex, Modal, InjectedModalProps, ThemeSwitcher } from '@pancakeswap/uikit'
 import {
@@ -30,11 +30,11 @@ const SettingsModal: React.FC<InjectedModalProps> = ({ onDismiss }) => {
   const [expertMode, toggleExpertMode] = useExpertModeManager()
   const [singleHopOnly, setSingleHopOnly] = useUserSingleHopOnly()
   const [audioPlay, toggleSetAudioMode] = useAudioModeManager()
-  const [subgraphHealth, setSubgraphHealth] = useSubgraphHealthIndicatorManager()
+  const [subgraphHealth, setSubgraphHealh] = useSubgraphHealthIndicatorManager()
   const { onChangeRecipient } = useSwapActionHandlers()
 
   const { t } = useTranslation()
-  const { theme, isDark, setTheme } = useTheme()
+  const { theme, isDark, toggleTheme } = useTheme()
 
   if (showConfirmExpertModal) {
     return (
@@ -59,75 +59,74 @@ const SettingsModal: React.FC<InjectedModalProps> = ({ onDismiss }) => {
   }
 
   return (
-    <Modal
-      title={t('Settings')}
-      headerBackground="gradients.cardHeader"
-      onDismiss={onDismiss}
-      style={{ maxWidth: '420px' }}
-    >
-      <ScrollableContainer>
-        <Flex pb="24px" flexDirection="column">
-          <Text bold textTransform="uppercase" fontSize="12px" color="secondary" mb="24px">
-            {t('Global')}
-          </Text>
-          <Flex justifyContent="space-between">
-            <Text mb="24px">{t('Dark mode')}</Text>
-            <ThemeSwitcher isDark={isDark} toggleTheme={() => setTheme(isDark ? 'light' : 'dark')} />
-          </Flex>
-          <GasSettings />
-        </Flex>
-        <Flex pt="24px" flexDirection="column" borderTop={`1px ${theme.colors.cardBorder} solid`}>
-          <Text bold textTransform="uppercase" fontSize="12px" color="secondary" mb="24px">
-            {t('Swaps & Liquidity')}
-          </Text>
-          <TransactionSettings />
-        </Flex>
-        <Flex justifyContent="space-between" alignItems="center" mb="24px">
-          <Flex alignItems="center">
-            <Text>{t('Expert Mode')}</Text>
-            <QuestionHelper
-              text={t('Bypasses confirmation modals and allows high slippage trades. Use at your own risk.')}
-              placement="top-start"
-              ml="4px"
-            />
-          </Flex>
-          <Toggle id="toggle-expert-mode-button" scale="md" checked={expertMode} onChange={handleExpertModeToggle} />
-        </Flex>
-        <Flex justifyContent="space-between" alignItems="center" mb="24px">
-          <Flex alignItems="center">
-            <Text>{t('Disable Multihops')}</Text>
-            <QuestionHelper text={t('Restricts swaps to direct pairs only.')} placement="top-start" ml="4px" />
-          </Flex>
-          <Toggle
-            id="toggle-disable-multihop-button"
-            checked={singleHopOnly}
-            scale="md"
-            onChange={() => {
-              setSingleHopOnly(!singleHopOnly)
-            }}
-          />
-        </Flex>
-        <Flex justifyContent="space-between" alignItems="center" mb="24px">
-          <Flex alignItems="center">
-            <Text>{t('Subgraph Health Indicator')}</Text>
-            <QuestionHelper
-              text={t(
-                'Turn on NFT market subgraph health indicator all the time. Default is to show the indicator only when the network is delayed',
-              )}
-              placement="top-start"
-              ml="4px"
-            />
-          </Flex>
-          <Toggle
-            id="toggle-subgraph-health-button"
-            checked={subgraphHealth}
-            scale="md"
-            onChange={() => {
-              setSubgraphHealth(!subgraphHealth)
-            }}
-          />
-        </Flex>
-        <Flex justifyContent="space-between" alignItems="center">
+    <div className='opacity'>
+      <div className='box-modal'>
+        <Modal
+          className='glass'
+          title={t('Settings')}
+
+          onDismiss={onDismiss}
+          style={{ color: 'white', maxWidth: '420px' }}
+        >
+          <ScrollableContainer>
+            <Flex pb="24px" flexDirection="column">
+
+              <GasSettings />
+            </Flex>
+            <Flex pt="24px" flexDirection="column" borderTop={`1px ${theme.colors.cardBorder} solid`}>
+              <Text className='btncolor2' bold textTransform="uppercase" fontSize="12px" color="secondary" mb="24px">
+                {t('Swaps & Liquidity')}
+              </Text>
+              <TransactionSettings />
+            </Flex>
+            <Flex justifyContent="space-between" alignItems="center" mb="24px">
+              <Flex alignItems="center">
+                <Text>{t('Expert Mode')}</Text>
+                <QuestionHelper
+                  text={t('Bypasses confirmation modals and allows high slippage trades. Use at your own risk.')}
+                  placement="top-start"
+                  ml="4px"
+                />
+              </Flex>
+              <Toggle id="toggle-expert-mode-button" scale="md" checked={expertMode} onChange={handleExpertModeToggle} />
+            </Flex>
+            <Flex justifyContent="space-between" alignItems="center" mb="24px">
+              <Flex alignItems="center">
+                <Text>{t('Disable Multihops')}</Text>
+                <QuestionHelper text={t('Restricts swaps to direct pairs only.')} placement="top-start" ml="4px" />
+              </Flex>
+              <Toggle
+                id="toggle-disable-multihop-button"
+                checked={singleHopOnly}
+                scale="md"
+                onChange={() => {
+                  setSingleHopOnly(!singleHopOnly)
+                }}
+              />
+            </Flex>
+            <Flex justifyContent="space-between" alignItems="center" mb="24px">
+              <Flex alignItems="center">
+                <Text>{t('Subgraph Health Indicator')}</Text>
+                <QuestionHelper
+                  text={t(
+                    'Turn on NFT market subgraph health indicator all the time. Default is to show the indicator only when the network is delayed',
+                  )}
+                  placement="top-start"
+                  ml="4px"
+
+                />
+              </Flex>
+              <Toggle
+
+                id="toggle-subgraph-health-button"
+                checked={subgraphHealth}
+                scale="md"
+                onChange={() => {
+                  setSubgraphHealh(!subgraphHealth)
+                }}
+              />
+            </Flex>
+            {/* <Flex justifyContent="space-between" alignItems="center">
           <Flex alignItems="center">
             <Text>{t('Flippy sounds')}</Text>
             <QuestionHelper
@@ -137,9 +136,11 @@ const SettingsModal: React.FC<InjectedModalProps> = ({ onDismiss }) => {
             />
           </Flex>
           <PancakeToggle checked={audioPlay} onChange={toggleSetAudioMode} scale="md" />
-        </Flex>
-      </ScrollableContainer>
-    </Modal>
+        </Flex>  */}
+          </ScrollableContainer>
+        </Modal>
+      </div>
+    </div>
   )
 }
 

@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import times from 'lodash/times'
 import orderBy from 'lodash/orderBy'
 import { Skeleton, Table, Td, Th } from '@pancakeswap/uikit'
@@ -64,7 +64,6 @@ const PreviousBetsTable: React.FC<PreviousBetsTableProps> = ({ numberOfBets = 5,
               </tr>
             ))
           : orderedBets.map((bet) => {
-              const isCancelled = bet.round.failed
               const isWinner = bet.position === bet.round.position
 
               return (
@@ -77,9 +76,9 @@ const PreviousBetsTable: React.FC<PreviousBetsTableProps> = ({ numberOfBets = 5,
                   </Td>
                   <Td textAlign="right">
                     <NetWinnings
-                      amount={!isCancelled && isWinner ? bet.claimedNetBNB : bet.amount}
-                      textPrefix={isCancelled ? '' : isWinner ? '+' : '-'}
-                      textColor={isCancelled ? 'textSubtle' : isWinner ? 'success' : 'failure'}
+                      amount={isWinner ? bet.claimedNetBNB : bet.amount}
+                      textPrefix={isWinner ? '+' : '-'}
+                      textColor={isWinner ? 'success' : 'failure'}
                     />
                   </Td>
                 </tr>

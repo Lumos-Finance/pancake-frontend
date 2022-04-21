@@ -12,6 +12,7 @@ export const ONE_DAY_UNIX = 86400 // 24h * 60m * 60s
 export const ONE_HOUR_SECONDS = 3600
 
 export const ITEMS_PER_INFO_TABLE_PAGE = 10
+export const ITEMS_PER_INFO_TABLES_PT = 5;
 
 // These tokens are either incorrectly priced or have some other issues that spoil the query data
 // None of them present any interest as they have almost 0 daily trade volume

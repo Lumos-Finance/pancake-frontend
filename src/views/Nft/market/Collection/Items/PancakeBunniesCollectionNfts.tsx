@@ -1,15 +1,18 @@
+import React from 'react'
 import { Grid } from '@pancakeswap/uikit'
 import orderBy from 'lodash/orderBy'
+import { Collection } from 'state/nftMarket/types'
 import { CollectibleLinkCard } from '../../components/CollectibleCard'
 import useAllPancakeBunnyNfts from '../../hooks/useAllPancakeBunnyNfts'
 import GridPlaceholder from '../../components/GridPlaceholder'
 
 interface CollectionNftsProps {
-  address: string
+  collection: Collection
   sortBy?: string
 }
 
-const PancakeBunniesCollectionNfts: React.FC<CollectionNftsProps> = ({ address, sortBy = 'updatedAt' }) => {
+const PancakeBunniesCollectionNfts: React.FC<CollectionNftsProps> = ({ collection, sortBy = 'updatedAt' }) => {
+  const { address } = collection
   const allPancakeBunnyNfts = useAllPancakeBunnyNfts(address)
 
   const sortedNfts = allPancakeBunnyNfts
@@ -30,7 +33,7 @@ const PancakeBunniesCollectionNfts: React.FC<CollectionNftsProps> = ({ address, 
         alignItems="start"
       >
         {sortedNfts.map((nft) => {
-          return <CollectibleLinkCard key={`${nft?.tokenId}-${nft?.collectionName}`} nft={nft} />
+          return <CollectibleLinkCard key={`${nft.tokenId}-${nft.collectionName}`} nft={nft} />
         })}
       </Grid>
     </>

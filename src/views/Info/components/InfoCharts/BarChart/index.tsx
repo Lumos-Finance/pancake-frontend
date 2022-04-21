@@ -1,7 +1,7 @@
-import { useEffect, Dispatch, SetStateAction } from 'react'
+import React, { useEffect, Dispatch, SetStateAction } from 'react'
 import { BarChart, ResponsiveContainer, XAxis, YAxis, Tooltip, Bar } from 'recharts'
 import useTheme from 'hooks/useTheme'
-import { formatAmount } from 'utils/formatInfoNumbers'
+import { formatAmount } from 'views/Info/utils/formatInfoNumbers'
 import { BarChartLoader } from 'views/Info/components/ChartLoaders'
 import { useTranslation } from 'contexts/Localization'
 
@@ -73,6 +73,8 @@ const Chart = ({ data, setHoverValue, setHoverDate }: LineChartProps) => {
           tickLine={false}
           tickFormatter={(time) => time.toLocaleDateString(undefined, { day: '2-digit' })}
           minTickGap={10}
+          tick={{  fill: "#fff" }}
+
         />
         <YAxis
           dataKey="value"
@@ -84,7 +86,7 @@ const Chart = ({ data, setHoverValue, setHoverDate }: LineChartProps) => {
           fontSize="12px"
           tickFormatter={(val) => `$${formatAmount(val)}`}
           orientation="right"
-          tick={{ dx: 10, fill: theme.colors.textSubtle }}
+          tick={{ dx: 10, fill: "#fff" }}
         />
         <Tooltip
           cursor={{ fill: theme.colors.backgroundDisabled }}

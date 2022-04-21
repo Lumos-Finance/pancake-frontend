@@ -1,10 +1,10 @@
-import { NextLinkFromReactRouter } from 'components/NextLink'
-import ToggleView from 'components/ToggleView/ToggleView'
+import React from 'react'
+import { useRouteMatch, Link } from 'react-router-dom'
 import { ViewMode } from 'state/user/actions'
-import { useRouter } from 'next/router'
 import styled from 'styled-components'
 import { ButtonMenu, ButtonMenuItem, Toggle, Text, NotificationDot } from '@pancakeswap/uikit'
 import { useTranslation } from 'contexts/Localization'
+import ToggleView from './ToggleView/ToggleView'
 
 const ToggleWrapper = styled.div`
   display: flex;
@@ -53,24 +53,19 @@ const Wrapper = styled.div`
 `
 
 const PoolTabButtons = ({ stakedOnly, setStakedOnly, hasStakeInFinishedPools, viewMode, setViewMode }) => {
-  const router = useRouter()
-
+  const { url, isExact } = useRouteMatch()
   const { t } = useTranslation()
 
-  const isExact = router.asPath === '/pools'
-
-  const viewModeToggle = (
-    <ToggleView idPrefix="clickPool" viewMode={viewMode} onToggle={(mode: ViewMode) => setViewMode(mode)} />
-  )
+  const viewModeToggle = <ToggleView viewMode={viewMode} onToggle={(mode: ViewMode) => setViewMode(mode)} />
 
   const liveOrFinishedSwitch = (
     <Wrapper>
       <ButtonMenu activeIndex={isExact ? 0 : 1} scale="sm" variant="subtle">
-        <ButtonMenuItem as={NextLinkFromReactRouter} to="/pools" replace>
+        <ButtonMenuItem as={Link} to={`${url}`}>
           {t('Live')}
         </ButtonMenuItem>
         <NotificationDot show={hasStakeInFinishedPools}>
-          <ButtonMenuItem id="finished-pools-button" as={NextLinkFromReactRouter} to="/pools/history" replace>
+          <ButtonMenuItem id="finished-pools-button" as={Link} to={`${url}/history`}>
             {t('Finished')}
           </ButtonMenuItem>
         </NotificationDot>

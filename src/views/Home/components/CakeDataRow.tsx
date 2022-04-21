@@ -1,16 +1,12 @@
-import { Flex, Heading, Skeleton, Text } from '@pancakeswap/uikit'
-import Balance from 'components/Balance'
-import cakeAbi from 'config/abi/cake.json'
-import tokens from 'config/constants/tokens'
-import { useTranslation } from 'contexts/Localization'
-import useIntersectionObserver from 'hooks/useIntersectionObserver'
-import { useEffect, useState } from 'react'
-import { usePriceCakeBusd } from 'state/farms/hooks'
+import React from 'react'
 import styled from 'styled-components'
-import { formatBigNumber, formatLocalisedCompactNumber } from 'utils/formatBalance'
-import { multicallv2 } from 'utils/multicall'
-import useSWR from 'swr'
-import { SLOW_INTERVAL } from 'config/constants'
+import { useTotalSupply, useBurnedBalance } from 'hooks/useTokenBalance'
+import { getBalanceNumber, formatLocalisedCompactNumber } from 'utils/formatBalance'
+import { usePriceCakeBusd } from 'state/farms/hooks'
+import { Flex, Text, Heading, Skeleton } from '@pancakeswap/uikit'
+import { useTranslation } from 'contexts/Localization'
+import Balance from 'components/Balance'
+import tokens from 'config/constants/tokens'
 
 const StyledColumn = styled(Flex)<{ noMobileBorder?: boolean }>`
   flex-direction: column;
@@ -49,45 +45,12 @@ const emissionsPerBlock = 14.25
 
 const CakeDataRow = () => {
   const { t } = useTranslation()
-  const { observerRef, isIntersecting } = useIntersectionObserver()
-  const [loadData, setLoadData] = useState(false)
-  const {
-    data: { cakeSupply, burnedBalance } = {
-      cakeSupply: 0,
-      burnedBalance: 0,
-    },
-  } = useSWR(
-    loadData ? ['cakeDataRow'] : null,
-    async () => {
-      const totalSupplyCall = { address: tokens.cake.address, name: 'totalSupply' }
-      const burnedTokenCall = {
-        address: tokens.cake.address,
-        name: 'balanceOf',
-        params: ['0x000000000000000000000000000000000000dEaD'],
-      }
-      const tokenDataResultRaw = await multicallv2(cakeAbi, [totalSupplyCall, burnedTokenCall], {
-        requireSuccess: false,
-      })
-      const [totalSupply, burned] = tokenDataResultRaw.flat()
-
-      return {
-        cakeSupply: totalSupply && burned ? +formatBigNumber(totalSupply.sub(burned)) : 0,
-        burnedBalance: burned ? +formatBigNumber(burned) : 0,
-      }
-    },
-    {
-      refreshInterval: SLOW_INTERVAL,
-    },
-  )
+  const totalSupply = useTotalSupply()
+  const burnedBalance = getBalanceNumber(useBurnedBalance(tokens.cake.address))
+  const cakeSupply = totalSupply ? getBalanceNumber(totalSupply) - burnedBalance : 0
   const cakePriceBusd = usePriceCakeBusd()
   const mcap = cakePriceBusd.times(cakeSupply)
   const mcapString = formatLocalisedCompactNumber(mcap.toNumber())
-
-  useEffect(() => {
-    if (isIntersecting) {
-      setLoadData(true)
-    }
-  }, [isIntersecting])
 
   return (
     <Grid>
@@ -96,10 +59,7 @@ const CakeDataRow = () => {
         {cakeSupply ? (
           <Balance decimals={0} lineHeight="1.1" fontSize="24px" bold value={cakeSupply} />
         ) : (
-          <>
-            <div ref={observerRef} />
-            <Skeleton height={24} width={126} my="4px" />
-          </>
+          <Skeleton height={24} width={126} my="4px" />
         )}
       </Flex>
       <StyledColumn>

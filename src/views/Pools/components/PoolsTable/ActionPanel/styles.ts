@@ -1,11 +1,11 @@
 import styled from 'styled-components'
-import { Flex } from '@pancakeswap/uikit'
 
-export const ActionContainer = styled(Flex)<{ isAutoVault?: boolean }>`
-  flex-direction: column;
+export const ActionContainer = styled.div<{ isAutoVault?: boolean }>`
   padding: 16px;
   border: 2px solid ${({ theme }) => theme.colors.input};
   border-radius: 16px;
+  flex-grow: 1;
+  flex-basis: 0;
   margin-bottom: 16px;
 
   ${({ theme }) => theme.mediaQueries.sm} {
@@ -22,25 +22,13 @@ export const ActionContainer = styled(Flex)<{ isAutoVault?: boolean }>`
   }
 `
 
-ActionContainer.defaultProps = {
-  flex: 1,
-}
-
-export const RowActionContainer = styled(ActionContainer)`
-  flex-direction: row;
-`
-
 export const ActionTitles = styled.div`
   font-weight: 600;
   font-size: 12px;
 `
 
-export const ActionContent = styled(Flex)`
+export const ActionContent = styled.div`
   display: flex;
   justify-content: space-between;
   align-items: center;
 `
-
-ActionContent.defaultProps = {
-  mt: '8px',
-}

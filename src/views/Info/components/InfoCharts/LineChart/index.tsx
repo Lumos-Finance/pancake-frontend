@@ -1,7 +1,7 @@
-import { useEffect, Dispatch, SetStateAction } from 'react'
+import React, { useEffect, Dispatch, SetStateAction } from 'react'
 import { ResponsiveContainer, XAxis, YAxis, Tooltip, AreaChart, Area } from 'recharts'
 import useTheme from 'hooks/useTheme'
-import { formatAmount } from 'utils/formatInfoNumbers'
+import { formatAmount } from 'views/Info/utils/formatInfoNumbers'
 import { LineChartLoader } from 'views/Info/components/ChartLoaders'
 import { useTranslation } from 'contexts/Localization'
 
@@ -34,7 +34,7 @@ const LineChart = ({ data, setHoverValue, setHoverDate }: LineChartProps) => {
     return <LineChartLoader />
   }
   return (
-    <ResponsiveContainer>
+    <ResponsiveContainer >
       <AreaChart
         data={data}
         width={300}
@@ -52,8 +52,8 @@ const LineChart = ({ data, setHoverValue, setHoverDate }: LineChartProps) => {
       >
         <defs>
           <linearGradient id="gradient" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="5%" stopColor={theme.colors.inputSecondary} stopOpacity={0.5} />
-            <stop offset="100%" stopColor={theme.colors.secondary} stopOpacity={0} />
+            <stop offset="5%" stopColor="#fff" stopOpacity={0.5} />
+            <stop offset="100%" stopColor="#fff" stopOpacity={0} />
           </linearGradient>
         </defs>
         <XAxis
@@ -62,6 +62,7 @@ const LineChart = ({ data, setHoverValue, setHoverDate }: LineChartProps) => {
           tickLine={false}
           tickFormatter={(time) => time.toLocaleDateString(undefined, { day: '2-digit' })}
           minTickGap={10}
+          tick={{ fill: "#fff" }}
         />
         <YAxis
           dataKey="value"
@@ -72,10 +73,10 @@ const LineChart = ({ data, setHoverValue, setHoverDate }: LineChartProps) => {
           fontSize="12px"
           tickFormatter={(val) => `$${formatAmount(val)}`}
           orientation="right"
-          tick={{ dx: 10, fill: theme.colors.textSubtle }}
+          tick={{ dx: 10, fill: "#fff" }}
         />
         <Tooltip
-          cursor={{ stroke: theme.colors.secondary }}
+          cursor={{ stroke: "#fff" }}
           contentStyle={{ display: 'none' }}
           formatter={(tooltipValue, name, props) => (
             <HoverUpdater
@@ -86,7 +87,7 @@ const LineChart = ({ data, setHoverValue, setHoverDate }: LineChartProps) => {
             />
           )}
         />
-        <Area dataKey="value" type="monotone" stroke={theme.colors.secondary} fill="url(#gradient)" strokeWidth={2} />
+        <Area dataKey="value" type="monotone" stroke="#21C797" fill="#21C797" strokeWidth={2} />
       </AreaChart>
     </ResponsiveContainer>
   )

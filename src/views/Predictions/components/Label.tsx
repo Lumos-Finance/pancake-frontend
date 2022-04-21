@@ -1,14 +1,13 @@
-import { useEffect, useRef } from 'react'
+import React, { useEffect, useRef } from 'react'
 import { useCountUp } from 'react-countup'
 import styled from 'styled-components'
 import { BnbUsdtPairTokenIcon, Box, Flex, PocketWatchIcon, Text } from '@pancakeswap/uikit'
 import { ROUND_BUFFER } from 'state/predictions/config'
 import { formatBigNumberToFixed } from 'utils/formatBalance'
-import { useGetCurrentRoundLockTimestamp } from 'state/predictions/hooks'
+import { useGetCurrentRoundLockTimestamp, useGetLastOraclePrice } from 'state/predictions/hooks'
 import { useTranslation } from 'contexts/Localization'
 import { formatRoundTime } from '../helpers'
 import useCountdown from '../hooks/useCountdown'
-import usePollOraclePrice from '../hooks/usePollOraclePrice'
 
 const Token = styled(Box)`
   margin-top: -24px;
@@ -90,16 +89,14 @@ const Label = styled(Flex)<{ dir: 'left' | 'right' }>`
 `
 
 export const PricePairLabel: React.FC = () => {
-  const { price } = usePollOraclePrice()
+  const price = useGetLastOraclePrice()
   const priceAsNumber = parseFloat(formatBigNumberToFixed(price, 3, 8))
-  const countUpState = useCountUp({
+  const { countUp, update } = useCountUp({
     start: 0,
     end: priceAsNumber,
     duration: 1,
     decimals: 3,
   })
-
-  const { countUp, update } = countUpState || {}
 
   const updateRef = useRef(update)
 
@@ -114,7 +111,7 @@ export const PricePairLabel: React.FC = () => {
       </Token>
       <Label dir="left">
         <Title bold textTransform="uppercase">
-          BNBUSD
+          BNBUSDT
         </Title>
         <Price fontSize="12px">{`$${countUp}`}</Price>
       </Label>
@@ -132,10 +129,6 @@ export const TimerLabel: React.FC<TimerLabelProps> = ({ interval, unit }) => {
   const { secondsRemaining } = useCountdown(currentRoundLockTimestamp + ROUND_BUFFER)
   const countdown = formatRoundTime(secondsRemaining)
   const { t } = useTranslation()
-
-  if (!currentRoundLockTimestamp) {
-    return null
-  }
 
   return (
     <Box pr="24px" position="relative">

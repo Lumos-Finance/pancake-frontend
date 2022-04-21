@@ -1,3 +1,4 @@
+import React from 'react'
 import styled from 'styled-components'
 import { Flex, Skeleton, PocketWatchIcon, Text } from '@pancakeswap/uikit'
 import { useTranslation } from 'contexts/Localization'

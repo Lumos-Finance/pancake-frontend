@@ -1,3 +1,4 @@
+import React from 'react'
 import { NoProfileAvatarIcon } from '@pancakeswap/uikit'
 import { Profile } from 'state/types'
 import styled from 'styled-components'
@@ -46,7 +47,7 @@ const ProfileAvatarWithTeam: React.FC<ProfileAvatarProps> = ({ profile }) => {
   return (
     <AvatarWrapper bg={profile.nft?.image.thumbnail}>
       {!profile.isActive && <AvatarInactive />}
-      {profile.team && <TeamAvatar src={`/images/teams/${profile.team.images.alt}`} alt={profile.team.name} />}
+      <TeamAvatar src={`/images/teams/${profile.team.images.alt}`} alt={profile.team.name} />
     </AvatarWrapper>
   )
 }

@@ -1,16 +1,14 @@
 /* eslint-disable react-hooks/exhaustive-deps */
-import { useContext, useEffect, useState } from 'react'
+import React, { useContext, useEffect, useState } from 'react'
 import { Button, useModal } from '@pancakeswap/uikit'
 import { ContextApi } from 'contexts/Localization/types'
-import { ToastDescriptionWithTx } from 'components/Toast'
-import { BigNumber } from '@ethersproject/bignumber'
-import { MaxUint256 } from '@ethersproject/constants'
+import { ethers, BigNumber } from 'ethers'
 import useApproveConfirmTransaction from 'hooks/useApproveConfirmTransaction'
 import { useCallWithGasPrice } from 'hooks/useCallWithGasPrice'
 import { useCake, useNftSaleContract } from 'hooks/useContract'
 import useToast from 'hooks/useToast'
 import { DefaultTheme } from 'styled-components'
-import { requiresApproval } from 'utils/requiresApproval'
+import { ethersToBigNumber } from 'utils/bigNumber'
 import { PancakeSquadContext } from 'views/PancakeSquad/context'
 import { SaleStatusEnum, UserStatusEnum } from '../../types'
 import BuyTicketsModal from '../Modals/BuyTickets'
@@ -57,7 +55,7 @@ const BuyTicketsButtons: React.FC<BuyTicketsProps> = ({
   const { callWithGasPrice } = useCallWithGasPrice()
   const nftSaleContract = useNftSaleContract()
   const { toastSuccess } = useToast()
-  const { reader: cakeContractReader, signer: cakeContractApprover } = useCake()
+  const cakeContract = useCake()
   const { isUserEnabled, setIsUserEnabled } = useContext(PancakeSquadContext)
 
   const canBuySaleTicket =
@@ -71,13 +69,19 @@ const BuyTicketsButtons: React.FC<BuyTicketsProps> = ({
   const { isApproving, isApproved, isConfirming, handleApprove, handleConfirm, hasApproveFailed, hasConfirmFailed } =
     useApproveConfirmTransaction({
       onRequiresApproval: async () => {
-        return requiresApproval(cakeContractReader, account, nftSaleContract.address)
+        try {
+          const response = await cakeContract.allowance(account, nftSaleContract.address)
+          const currentAllowance = ethersToBigNumber(response)
+          return currentAllowance.gt(0)
+        } catch (error) {
+          return false
+        }
       },
       onApprove: () => {
-        return callWithGasPrice(cakeContractApprover, 'approve', [nftSaleContract.address, MaxUint256])
+        return callWithGasPrice(cakeContract, 'approve', [nftSaleContract.address, ethers.constants.MaxUint256])
       },
       onApproveSuccess: async ({ receipt }) => {
-        toastSuccess(t('Transaction has succeeded!'), <ToastDescriptionWithTx txHash={receipt.transactionHash} />)
+        toastSuccess(t('Transaction has succeeded!'))
         setTxHashEnablingResult(receipt.transactionHash)
       },
       onConfirm: ({ ticketsNumber }) => {

@@ -1,10 +1,10 @@
-import { useState, ReactNode } from 'react'
+import React, { useState } from 'react'
 import styled from 'styled-components'
 import { ExpandableLabel, Flex, FlexProps, Text } from '@pancakeswap/uikit'
 import { useTranslation } from 'contexts/Localization'
 
-interface FoldableTextProps extends Omit<FlexProps, 'title'> {
-  title?: ReactNode
+interface FoldableTextProps extends FlexProps {
+  title?: string
 }
 
 const Wrapper = styled(Flex)`
@@ -30,17 +30,19 @@ const FoldableText: React.FC<FoldableTextProps> = ({ title, children, ...props }
   const [isExpanded, setIsExpanded] = useState(false)
 
   return (
-    <Flex {...props} flexDirection="column">
-      <Wrapper justifyContent="space-between" alignItems="center" pb="16px" onClick={() => setIsExpanded((s) => !s)}>
+    <Wrapper {...props} flexDirection="column" onClick={() => setIsExpanded(!isExpanded)}>
+      <Flex justifyContent="space-between" alignItems="center" pb="16px">
         <Text fontWeight="bold">{title}</Text>
         <StyledExpandableLabelWrapper>
-          <ExpandableLabel expanded={isExpanded}>{isExpanded ? t('Hide') : t('Details')}</ExpandableLabel>
+          <ExpandableLabel expanded={isExpanded} onClick={() => setIsExpanded(!isExpanded)}>
+            {isExpanded ? t('Hide') : t('Details')}
+          </ExpandableLabel>
         </StyledExpandableLabelWrapper>
-      </Wrapper>
+      </Flex>
       <StyledChildrenFlex isExpanded={isExpanded} flexDirection="column">
         {children}
       </StyledChildrenFlex>
-    </Flex>
+    </Wrapper>
   )
 }
 

@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import React, { useState, useEffect } from 'react'
 import { formatUnits } from '@ethersproject/units'
 import { Card, CardBody, Heading, Text } from '@pancakeswap/uikit'
 import { useWeb3React } from '@web3-react/core'
@@ -9,10 +9,12 @@ import { useGetCakeBalance } from 'hooks/useTokenBalance'
 import { useCallWithGasPrice } from 'hooks/useCallWithGasPrice'
 import ApproveConfirmButtons from 'components/ApproveConfirmButtons'
 import useToast from 'hooks/useToast'
+import { useAppDispatch } from 'state'
+import { fetchUserNfts } from 'state/nftMarket/reducer'
+import { useGetCollections } from 'state/nftMarket/hooks'
 import { getNftsFromCollectionApi } from 'state/nftMarket/helpers'
 import { ApiSingleTokenData } from 'state/nftMarket/types'
 import { pancakeBunniesAddress } from 'views/Nft/market/constants'
-import { requiresApproval } from 'utils/requiresApproval'
 import { FetchStatus } from 'config/constants/types'
 import SelectionCard from './SelectionCard'
 import NextStepButton from './NextStepButton'
@@ -27,10 +29,12 @@ const Mint: React.FC = () => {
   const [selectedBunnyId, setSelectedBunnyId] = useState<string>('')
   const [starterNfts, setStarterNfts] = useState<MintNftData[]>([])
   const { actions, minimumCakeRequired, allowance } = useProfileCreation()
+  const collections = useGetCollections()
   const { toastSuccess } = useToast()
+  const dispatch = useAppDispatch()
 
   const { account } = useWeb3React()
-  const { reader: cakeContractReader, signer: cakeContractApprover } = useCake()
+  const cakeContract = useCake()
   const bunnyFactoryContract = useBunnyFactory()
   const { t } = useTranslation()
   const { balance: cakeBalance, fetchStatus } = useGetCakeBalance()
@@ -39,9 +43,7 @@ const Mint: React.FC = () => {
 
   useEffect(() => {
     const getStarterNfts = async () => {
-      const response = await getNftsFromCollectionApi(pancakeBunniesAddress)
-      if (!response) return
-      const { data: allPbTokens } = response
+      const { data: allPbTokens } = await getNftsFromCollectionApi(pancakeBunniesAddress)
       const nfts = STARTER_NFT_BUNNY_IDS.map((bunnyId) => {
         if (allPbTokens && allPbTokens[bunnyId]) {
           return { ...allPbTokens[bunnyId], bunnyId }
@@ -58,10 +60,16 @@ const Mint: React.FC = () => {
   const { isApproving, isApproved, isConfirmed, isConfirming, handleApprove, handleConfirm } =
     useApproveConfirmTransaction({
       onRequiresApproval: async () => {
-        return requiresApproval(cakeContractReader, account, bunnyFactoryContract.address, minimumCakeRequired)
+        // TODO: Move this to a helper, this check will be probably be used many times
+        try {
+          const response = await cakeContract.allowance(account, bunnyFactoryContract.address)
+          return response.gte(minimumCakeRequired)
+        } catch (error) {
+          return false
+        }
       },
       onApprove: () => {
-        return callWithGasPrice(cakeContractApprover, 'approve', [bunnyFactoryContract.address, allowance.toString()])
+        return callWithGasPrice(cakeContract, 'approve', [bunnyFactoryContract.address, allowance.toString()])
       },
       onConfirm: () => {
         return callWithGasPrice(bunnyFactoryContract, 'mintNFT', [selectedBunnyId])
@@ -71,6 +79,7 @@ const Mint: React.FC = () => {
       },
       onSuccess: () => {
         toastSuccess(t('Success'), t('You have minted your starter NFT'))
+        dispatch(fetchUserNfts({ account, collections }))
         actions.nextStep()
       },
     })

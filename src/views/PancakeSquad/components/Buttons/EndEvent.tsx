@@ -1,4 +1,5 @@
-import { NextLinkFromReactRouter } from 'components/NextLink'
+import React from 'react'
+import { Link } from 'react-router-dom'
 import { Button, Flex } from '@pancakeswap/uikit'
 import { ContextApi } from 'contexts/Localization/types'
 import { SaleStatusEnum, UserStatusEnum } from '../../types'
@@ -28,14 +29,12 @@ const EndEventButtons: React.FC<EndEventProps> = ({
     <Flex flexDirection={['column', null, null, 'row']}>
       {canViewMarket && (
         <Button mb={['4px', null, null, '0']} mr={[0, null, null, '4px']}>
-          <NextLinkFromReactRouter to="/nfts">{t('View market')}</NextLinkFromReactRouter>
+          <Link to="/nfts">{t('View market')}</Link>
         </Button>
       )}
       {hasSquad && (
         <Button>
-          <NextLinkFromReactRouter to={`/nfts/profile/${account}`}>
-            {t('Your Squad (%tokens%)', { tokens: numberTokensOfUser })}
-          </NextLinkFromReactRouter>
+          <Link to={`/nfts/profile/${account}`}>{t('Your Squad (%tokens%)', { tokens: numberTokensOfUser })}</Link>
         </Button>
       )}
     </Flex>

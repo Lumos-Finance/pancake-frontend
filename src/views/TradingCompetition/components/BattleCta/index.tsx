@@ -1,3 +1,4 @@
+import React from 'react'
 import styled from 'styled-components'
 import {
   Card,
@@ -10,10 +11,10 @@ import {
   useWalletModal,
   useModal,
 } from '@pancakeswap/uikit'
+import { useHistory } from 'react-router-dom'
 import useAuth from 'hooks/useAuth'
 import { useTranslation } from 'contexts/Localization'
 import { FINISHED, OVER } from 'config/constants/trading-competition/phases'
-import { useRouter } from 'next/router'
 import RegisterModal from '../RegisterModal'
 import ClaimModal from '../ClaimModal'
 import { Heading2Text } from '../CompetitionHeadingText'
@@ -65,7 +66,7 @@ const BattleCta: React.FC<CompetitionProps> = ({
   onRegisterSuccess,
   onClaimSuccess,
 }) => {
-  const router = useRouter()
+  const history = useHistory()
   const { t } = useTranslation()
   const { login, logout } = useAuth()
   const { onPresentConnectModal } = useWalletModal(login, logout, t)
@@ -167,7 +168,7 @@ const BattleCta: React.FC<CompetitionProps> = ({
     }
     // Registered and competition is live
     if (hasRegistered && isCompetitionLive) {
-      router.push('/swap')
+      history.push('/swap')
     }
     // Registered and competition has finished
     if (hasRegistered && hasCompetitionEnded) {

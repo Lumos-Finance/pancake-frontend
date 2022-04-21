@@ -1,17 +1,18 @@
-import { Currency, CurrencyAmount, ETHER, Token, Trade } from '@pancakeswap/sdk'
-import { ParsedUrlQuery } from 'querystring'
+import { parseUnits } from '@ethersproject/units'
+import { Currency, CurrencyAmount, ETHER, JSBI, Token, TokenAmount, Trade } from '@pancakeswap/sdk'
+import { ParsedQs } from 'qs'
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
 import useENS from 'hooks/ENS/useENS'
 import useActiveWeb3React from 'hooks/useActiveWeb3React'
+import { useCurrency } from 'hooks/Tokens'
 import { useTradeExactIn, useTradeExactOut } from 'hooks/Trades'
-import { useRouter } from 'next/router'
+import useParsedQueryString from 'hooks/useParsedQueryString'
 import { useTranslation } from 'contexts/Localization'
 import { isAddress } from 'utils'
 import { computeSlippageAdjustedAmounts } from 'utils/prices'
 import getLpAddress from 'utils/getLpAddress'
 import { getTokenAddress } from 'views/Swap/components/Chart/utils'
-import tryParseAmount from 'utils/tryParseAmount'
 import { AppDispatch, AppState } from '../index'
 import { useCurrencyBalances } from '../wallet/hooks'
 import {
@@ -88,6 +89,26 @@ export function useSwapActionHandlers(): {
   }
 }
 
+// try to parse a user entered amount for a given token
+export function tryParseAmount(value?: string, currency?: Currency): CurrencyAmount | undefined {
+  if (!value || !currency) {
+    return undefined
+  }
+  try {
+    const typedValueParsed = parseUnits(value, currency.decimals).toString()
+    if (typedValueParsed !== '0') {
+      return currency instanceof Token
+        ? new TokenAmount(currency, JSBI.BigInt(typedValueParsed))
+        : CurrencyAmount.ether(JSBI.BigInt(typedValueParsed))
+    }
+  } catch (error) {
+    // should fail if the user specifies too many decimal places of precision (or maybe exceed max uint?)
+    console.debug(`Failed to parse input amount: "${value}"`, error)
+  }
+  // necessary for all paths to return a value
+  return undefined
+}
+
 const BAD_RECIPIENT_ADDRESSES: string[] = [
   '0x5C69bEe701ef814a2B6a3EDD4B1652CB9cc5aA6f', // v2 factory
   '0xf164fC0Ec4E93095b804a4795bBe1e041497b92a', // v2 router 01
@@ -107,12 +128,14 @@ function involvesAddress(trade: Trade, checksummedAddress: string): boolean {
 }
 
 // Get swap price for single token disregarding slippage and price impact
-export function useSingleTokenSwapInfo(
-  inputCurrencyId: string | undefined,
-  inputCurrency: Currency | undefined,
-  outputCurrencyId: string | undefined,
-  outputCurrency: Currency | undefined,
-): { [key: string]: number } {
+export function useSingleTokenSwapInfo(): { [key: string]: number } {
+  const {
+    [Field.INPUT]: { currencyId: inputCurrencyId },
+    [Field.OUTPUT]: { currencyId: outputCurrencyId },
+  } = useSwapState()
+
+  const inputCurrency = useCurrency(inputCurrencyId)
+  const outputCurrency = useCurrency(outputCurrencyId)
   const token0Address = getTokenAddress(inputCurrencyId)
   const token1Address = getTokenAddress(outputCurrencyId)
 
@@ -133,15 +156,7 @@ export function useSingleTokenSwapInfo(
 }
 
 // from the current swap inputs, compute the best trade and return it.
-export function useDerivedSwapInfo(
-  independentField: Field,
-  typedValue: string,
-  inputCurrencyId: string | undefined,
-  inputCurrency: Currency | undefined,
-  outputCurrencyId: string | undefined,
-  outputCurrency: Currency | undefined,
-  recipient: string,
-): {
+export function useDerivedSwapInfo(): {
   currencies: { [field in Field]?: Currency }
   currencyBalances: { [field in Field]?: CurrencyAmount }
   parsedAmount: CurrencyAmount | undefined
@@ -151,6 +166,16 @@ export function useDerivedSwapInfo(
   const { account } = useActiveWeb3React()
   const { t } = useTranslation()
 
+  const {
+    independentField,
+    typedValue,
+    [Field.INPUT]: { currencyId: inputCurrencyId },
+    [Field.OUTPUT]: { currencyId: outputCurrencyId },
+    recipient,
+  } = useSwapState()
+
+  const inputCurrency = useCurrency(inputCurrencyId)
+  const outputCurrency = useCurrency(outputCurrencyId)
   const recipientLookup = useENS(recipient ?? undefined)
   const to: string | null = (recipient === null ? account : recipientLookup.address) ?? null
 
@@ -235,7 +260,8 @@ function parseCurrencyFromURLParameter(urlParam: any): string {
 }
 
 function parseTokenAmountURLParameter(urlParam: any): string {
-  return typeof urlParam === 'string' && !Number.isNaN(parseFloat(urlParam)) ? urlParam : ''
+  // eslint-disable-next-line no-restricted-globals
+  return typeof urlParam === 'string' && !isNaN(parseFloat(urlParam)) ? urlParam : ''
 }
 
 function parseIndependentFieldURLParameter(urlParam: any): Field {
@@ -253,7 +279,7 @@ function validatedRecipient(recipient: any): string | null {
   return null
 }
 
-export function queryParametersToSwapState(parsedQs: ParsedUrlQuery): SwapState {
+export function queryParametersToSwapState(parsedQs: ParsedQs): SwapState {
   let inputCurrency = parseCurrencyFromURLParameter(parsedQs.inputCurrency) || DEFAULT_INPUT_CURRENCY
   let outputCurrency = parseCurrencyFromURLParameter(parsedQs.outputCurrency) || DEFAULT_OUTPUT_CURRENCY
   if (inputCurrency === outputCurrency) {
@@ -287,14 +313,14 @@ export function useDefaultsFromURLSearch():
   | undefined {
   const { chainId } = useActiveWeb3React()
   const dispatch = useDispatch<AppDispatch>()
-  const { query } = useRouter()
+  const parsedQs = useParsedQueryString()
   const [result, setResult] = useState<
     { inputCurrencyId: string | undefined; outputCurrencyId: string | undefined } | undefined
   >()
 
   useEffect(() => {
     if (!chainId) return
-    const parsed = queryParametersToSwapState(query)
+    const parsed = queryParametersToSwapState(parsedQs)
 
     dispatch(
       replaceSwapState({
@@ -307,7 +333,8 @@ export function useDefaultsFromURLSearch():
     )
 
     setResult({ inputCurrencyId: parsed[Field.INPUT].currencyId, outputCurrencyId: parsed[Field.OUTPUT].currencyId })
-  }, [dispatch, chainId, query])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [dispatch, chainId])
 
   return result
 }

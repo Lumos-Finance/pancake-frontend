@@ -4,10 +4,10 @@ import type {
   UnknownAsyncThunkRejectedAction,
   // eslint-disable-next-line import/no-unresolved
 } from '@reduxjs/toolkit/dist/matchers'
-import { createAsyncThunk, createSlice, isAnyOf } from '@reduxjs/toolkit'
+import { createAsyncThunk, createSlice, isPending, isFulfilled, isRejected } from '@reduxjs/toolkit'
 import stringify from 'fast-json-stable-stringify'
 import farmsConfig from 'config/constants/farms'
-import { isArchivedPid } from 'utils/farmHelpers'
+import isArchivedPid from 'utils/farmHelpers'
 import type { AppState } from 'state'
 import priceHelperLpsConfig from 'config/constants/priceHelperLps'
 import fetchFarms from './fetchFarms'
@@ -19,8 +19,6 @@ import {
   fetchFarmUserStakedBalances,
 } from './fetchFarmUser'
 import { SerializedFarmsState, SerializedFarm } from '../types'
-import { fetchMasterChefFarmPoolLength, fetchMasterChefRegularCakePerBlock } from './fetchMasterChefData'
-import { resetUserState } from '../global/actions'
 
 const noAccountFarmConfig = farmsConfig.map((farm) => ({
   ...farm,
@@ -43,7 +41,7 @@ export const nonArchivedFarms = farmsConfig.filter(({ pid }) => !isArchivedPid(p
 
 // Async thunks
 export const fetchFarmsPublicDataAsync = createAsyncThunk<
-  [SerializedFarm[], number, number],
+  SerializedFarm[],
   number[],
   {
     state: AppState
@@ -51,13 +49,10 @@ export const fetchFarmsPublicDataAsync = createAsyncThunk<
 >(
   'farms/fetchFarmsPublicDataAsync',
   async (pids) => {
-    const poolLength = await fetchMasterChefFarmPoolLength()
-    const regularCakePerBlock = await fetchMasterChefRegularCakePerBlock()
     const farmsToFetch = farmsConfig.filter((farmConfig) => pids.includes(farmConfig.pid))
-    const farmsCanFetch = farmsToFetch.filter((f) => poolLength.gt(f.pid))
 
     // Add price helper farms
-    const farmsWithPriceHelpers = farmsCanFetch.concat(priceHelperLpsConfig)
+    const farmsWithPriceHelpers = farmsToFetch.concat(priceHelperLpsConfig)
 
     const farms = await fetchFarms(farmsWithPriceHelpers)
     const farmsWithPrices = getFarmsPrices(farms)
@@ -66,7 +61,8 @@ export const fetchFarmsPublicDataAsync = createAsyncThunk<
     const farmsWithoutHelperLps = farmsWithPrices.filter((farm: SerializedFarm) => {
       return farm.pid || farm.pid === 0
     })
-    return [farmsWithoutHelperLps, poolLength.toNumber(), regularCakePerBlock.toNumber()]
+
+    return farmsWithoutHelperLps
   },
   {
     condition: (arg, { getState }) => {
@@ -97,17 +93,15 @@ export const fetchFarmUserDataAsync = createAsyncThunk<
 >(
   'farms/fetchFarmUserDataAsync',
   async ({ account, pids }) => {
-    const poolLength = await fetchMasterChefFarmPoolLength()
     const farmsToFetch = farmsConfig.filter((farmConfig) => pids.includes(farmConfig.pid))
-    const farmsCanFetch = farmsToFetch.filter((f) => poolLength.gt(f.pid))
-    const userFarmAllowances = await fetchFarmUserAllowances(account, farmsCanFetch)
-    const userFarmTokenBalances = await fetchFarmUserTokenBalances(account, farmsCanFetch)
-    const userStakedBalances = await fetchFarmUserStakedBalances(account, farmsCanFetch)
-    const userFarmEarnings = await fetchFarmUserEarnings(account, farmsCanFetch)
+    const userFarmAllowances = await fetchFarmUserAllowances(account, farmsToFetch)
+    const userFarmTokenBalances = await fetchFarmUserTokenBalances(account, farmsToFetch)
+    const userStakedBalances = await fetchFarmUserStakedBalances(account, farmsToFetch)
+    const userFarmEarnings = await fetchFarmUserEarnings(account, farmsToFetch)
 
     return userFarmAllowances.map((farmAllowance, index) => {
       return {
-        pid: farmsCanFetch[index].pid,
+        pid: farmsToFetch[index].pid,
         allowance: userFarmAllowances[index],
         tokenBalance: userFarmTokenBalances[index],
         stakedBalance: userStakedBalances[index],
@@ -148,30 +142,12 @@ export const farmsSlice = createSlice({
   initialState,
   reducers: {},
   extraReducers: (builder) => {
-    builder.addCase(resetUserState, (state) => {
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      state.data = state.data.map((farm) => {
-        return {
-          ...farm,
-          userData: {
-            allowance: '0',
-            tokenBalance: '0',
-            stakedBalance: '0',
-            earnings: '0',
-          },
-        }
-      })
-      state.userDataLoaded = false
-    })
     // Update farms with live data
     builder.addCase(fetchFarmsPublicDataAsync.fulfilled, (state, action) => {
-      const [farmPayload, poolLength, regularCakePerBlock] = action.payload
       state.data = state.data.map((farm) => {
-        const liveFarmData = farmPayload.find((farmData) => farmData.pid === farm.pid)
+        const liveFarmData = action.payload.find((farmData) => farmData.pid === farm.pid)
         return { ...farm, ...liveFarmData }
       })
-      state.poolLength = poolLength
-      state.regularCakePerBlock = regularCakePerBlock
     })
 
     // Update farms with user data
@@ -184,21 +160,15 @@ export const farmsSlice = createSlice({
       state.userDataLoaded = true
     })
 
-    builder.addMatcher(isAnyOf(fetchFarmUserDataAsync.pending, fetchFarmsPublicDataAsync.pending), (state, action) => {
+    builder.addMatcher(isPending, (state, action) => {
       state.loadingKeys[serializeLoadingKey(action, 'pending')] = true
     })
-    builder.addMatcher(
-      isAnyOf(fetchFarmUserDataAsync.fulfilled, fetchFarmsPublicDataAsync.fulfilled),
-      (state, action) => {
-        state.loadingKeys[serializeLoadingKey(action, 'fulfilled')] = false
-      },
-    )
-    builder.addMatcher(
-      isAnyOf(fetchFarmsPublicDataAsync.rejected, fetchFarmUserDataAsync.rejected),
-      (state, action) => {
-        state.loadingKeys[serializeLoadingKey(action, 'rejected')] = false
-      },
-    )
+    builder.addMatcher(isFulfilled, (state, action) => {
+      state.loadingKeys[serializeLoadingKey(action, 'fulfilled')] = false
+    })
+    builder.addMatcher(isRejected, (state, action) => {
+      state.loadingKeys[serializeLoadingKey(action, 'rejected')] = false
+    })
   },
 })
 

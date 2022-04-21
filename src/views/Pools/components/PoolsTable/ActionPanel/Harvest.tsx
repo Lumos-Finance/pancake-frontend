@@ -1,3 +1,4 @@
+import React from 'react'
 import { Button, Text, useModal, Flex, Skeleton, Heading } from '@pancakeswap/uikit'
 import BigNumber from 'bignumber.js'
 import { useWeb3React } from '@web3-react/core'
@@ -85,7 +86,7 @@ const HarvestAction: React.FunctionComponent<HarvestActionProps> = ({
     <ActionContainer>
       <ActionTitles>{actionTitle}</ActionTitles>
       <ActionContent>
-        <Flex flex="1" flexDirection="column" alignSelf="flex-start">
+        <Flex flex="1" pt="16px" flexDirection="column" alignSelf="flex-start">
           <>
             {hasEarnings ? (
               <>

@@ -12,6 +12,7 @@ import {
   removeSerializedToken,
   SerializedPair,
   muteAudio,
+  toggleTheme,
   unmuteAudio,
   updateGasPrice,
   updateUserDeadline,
@@ -25,7 +26,6 @@ import {
   ViewMode,
   updateUserPredictionAcceptedRisk,
   updateUserPredictionChartDisclaimerShow,
-  updateUserPredictionChainlinkChartDisclaimerShow,
   updateUserUsernameVisibility,
   updateUserExpertModeAcknowledgementShow,
   hidePhishingWarningBanner,
@@ -33,9 +33,8 @@ import {
   setChartViewMode,
   ChartViewMode,
   setSubgraphHealthIndicatorDisplayed,
-  updateUserLimitOrderAcceptedWarning,
 } from './actions'
-import { GAS_PRICE_GWEI } from '../types'
+import { GAS_PRICE_GWEI } from './hooks/helpers'
 
 const currentTimestamp = () => new Date().getTime()
 
@@ -69,6 +68,7 @@ export interface UserState {
 
   timestamp: number
   audioPlay: boolean
+  isDark: boolean
   isExchangeChartDisplayed: boolean
   isSubgraphHealthIndicatorDisplayed: boolean
   userChartViewMode: ChartViewMode
@@ -77,9 +77,7 @@ export interface UserState {
   userPoolsViewMode: ViewMode
   userFarmsViewMode: ViewMode
   userPredictionAcceptedRisk: boolean
-  userLimitOrderAcceptedWarning: boolean
   userPredictionChartDisclaimerShow: boolean
-  userPredictionChainlinkChartDisclaimerShow: boolean
   userExpertModeAcknowledgementShow: boolean
   userUsernameVisibility: boolean
   gasPrice: string
@@ -101,6 +99,7 @@ export const initialState: UserState = {
   pairs: {},
   timestamp: currentTimestamp(),
   audioPlay: true,
+  isDark: false,
   isExchangeChartDisplayed: true,
   isSubgraphHealthIndicatorDisplayed: false,
   userChartViewMode: ChartViewMode.BASIC,
@@ -109,9 +108,7 @@ export const initialState: UserState = {
   userPoolsViewMode: ViewMode.TABLE,
   userFarmsViewMode: ViewMode.TABLE,
   userPredictionAcceptedRisk: false,
-  userLimitOrderAcceptedWarning: false,
   userPredictionChartDisclaimerShow: true,
-  userPredictionChainlinkChartDisclaimerShow: true,
   userExpertModeAcknowledgementShow: true,
   userUsernameVisibility: false,
   gasPrice: GAS_PRICE_GWEI.default,
@@ -193,6 +190,9 @@ export default createReducer(initialState, (builder) =>
     .addCase(unmuteAudio, (state) => {
       state.audioPlay = true
     })
+    .addCase(toggleTheme, (state) => {
+      state.isDark = !state.isDark
+    })
     .addCase(updateUserFarmStakedOnly, (state, { payload: { userFarmStakedOnly } }) => {
       state.userFarmStakedOnly = userFarmStakedOnly
     })
@@ -208,14 +208,8 @@ export default createReducer(initialState, (builder) =>
     .addCase(updateUserPredictionAcceptedRisk, (state, { payload: { userAcceptedRisk } }) => {
       state.userPredictionAcceptedRisk = userAcceptedRisk
     })
-    .addCase(updateUserLimitOrderAcceptedWarning, (state, { payload: { userAcceptedRisk } }) => {
-      state.userLimitOrderAcceptedWarning = userAcceptedRisk
-    })
     .addCase(updateUserPredictionChartDisclaimerShow, (state, { payload: { userShowDisclaimer } }) => {
       state.userPredictionChartDisclaimerShow = userShowDisclaimer
-    })
-    .addCase(updateUserPredictionChainlinkChartDisclaimerShow, (state, { payload: { userShowDisclaimer } }) => {
-      state.userPredictionChainlinkChartDisclaimerShow = userShowDisclaimer
     })
     .addCase(updateUserExpertModeAcknowledgementShow, (state, { payload: { userExpertModeAcknowledgementShow } }) => {
       state.userExpertModeAcknowledgementShow = userExpertModeAcknowledgementShow

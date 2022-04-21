@@ -1,4 +1,4 @@
-import { useMemo } from 'react'
+import React, { useMemo } from 'react'
 import { Trade, TradeType } from '@pancakeswap/sdk'
 import { Button, Text, ErrorIcon, ArrowDownIcon } from '@pancakeswap/uikit'
 import { Field } from 'state/swap/actions'
@@ -9,6 +9,8 @@ import { CurrencyLogo } from 'components/Logo'
 import { RowBetween, RowFixed } from 'components/Layout/Row'
 import truncateHash from 'utils/truncateHash'
 import { TruncatedText, SwapShowAcceptChanges } from './styleds'
+import "./styles.css";
+
 
 export default function SwapModalHeader({
   trade,
@@ -65,6 +67,7 @@ export default function SwapModalHeader({
         <RowFixed gap="0px">
           <CurrencyLogo currency={trade.inputAmount.currency} size="24px" style={{ marginRight: '12px' }} />
           <TruncatedText
+            className="text"
             fontSize="24px"
             color={showAcceptChanges && trade.tradeType === TradeType.EXACT_OUTPUT ? 'primary' : 'text'}
           >
@@ -97,7 +100,7 @@ export default function SwapModalHeader({
           </TruncatedText>
         </RowFixed>
         <RowFixed gap="0px">
-          <Text fontSize="24px" ml="10px">
+          <Text className="text" fontSize="24px" ml="10px">
             {trade.outputAmount.currency.symbol}
           </Text>
         </RowFixed>

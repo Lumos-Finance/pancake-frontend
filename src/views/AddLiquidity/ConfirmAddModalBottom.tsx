@@ -1,4 +1,5 @@
 import { Currency, CurrencyAmount, Fraction, Percent } from '@pancakeswap/sdk'
+import React from 'react'
 import { Button, Text } from '@pancakeswap/uikit'
 import { useTranslation } from 'contexts/Localization'
 import { RowBetween, RowFixed } from '../../components/Layout/Row'
@@ -22,7 +23,8 @@ function ConfirmAddModalBottom({
 }) {
   const { t } = useTranslation()
   return (
-    <>
+    
+   <>
       <RowBetween>
         <Text>{t('%asset% Deposited', { asset: currencies[Field.CURRENCY_A]?.symbol })}</Text>
         <RowFixed>
@@ -56,10 +58,11 @@ function ConfirmAddModalBottom({
         <Text>{t('Share of Pool')}:</Text>
         <Text>{noLiquidity ? '100' : poolTokenPercentage?.toSignificant(4)}%</Text>
       </RowBetween>
-      <Button width="100%" onClick={onAdd} mt="20px">
+      <Button onClick={onAdd} mt="20px">
         {noLiquidity ? t('Create Pool & Supply') : t('Confirm Supply')}
       </Button>
-    </>
+      </>
+    
   )
 }
 

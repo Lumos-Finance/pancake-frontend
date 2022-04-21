@@ -1,10 +1,11 @@
+import React from 'react'
+import { Flex } from '@pancakeswap/uikit'
 import styled from 'styled-components'
 import PageSection from 'components/PageSection'
 import { useWeb3React } from '@web3-react/core'
 import useTheme from 'hooks/useTheme'
 import Container from 'components/Layout/Container'
 import { PageMeta } from 'components/Layout/Page'
-import { useTranslation } from 'contexts/Localization'
 import Hero from './components/Hero'
 import { swapSectionData, earnSectionData, cakeSectionData } from './components/SalesSection/data'
 import MetricsSection from './components/MetricsSection'
@@ -15,7 +16,36 @@ import Footer from './components/Footer'
 import CakeDataRow from './components/CakeDataRow'
 import { WedgeTopLeft, InnerWedgeWrapper, OuterWedgeWrapper, WedgeTopRight } from './components/WedgeSvgs'
 import UserBanner from './components/UserBanner'
-import MultipleBanner from './components/Banners/MultipleBanner'
+import IFOBanner from './components/Banners/IFOBanner'
+import Info from '../Info'
+
+import AddLiquidity from '../AddLiquidity'
+import { PoolUpdater, ProtocolUpdater, TokenUpdater } from '../../state/info/updaters'
+import InfoNav from '../Info/components/InfoNav'
+import Overview from '../Info/Overview'
+import Pools from '../Info/Pools'
+import PoolPage from '../Info/Pools/PoolPage'
+import Tokens from '../Info/Tokens'
+import RedirectInvalidToken from '../Info/Tokens/redirects'
+
+
+const showBanner = false
+
+const HomeBanner = ({ account }: { account: string }) => {
+  if (!showBanner) {
+    return null
+  }
+
+  return (
+    <Flex
+      pt={[account ? '220px' : '0', null, null, account ? '76px' : '0']}
+      mt={[account ? '0' : '-16px', null, null, account ? '0' : '-48px']}
+      pb="24px"
+    >
+      <IFOBanner />
+    </Flex>
+  )
+}
 
 const StyledHeroSection = styled(PageSection)`
   padding-top: 16px;
@@ -47,30 +77,25 @@ const Home: React.FC = () => {
 
   const HomeSectionContainerStyles = { margin: '0', width: '100%', maxWidth: '968px' }
 
-  const { t } = useTranslation()
-
   return (
     <>
       <PageMeta />
       <StyledHeroSection
         innerProps={{ style: { margin: '0', width: '100%' } }}
         background={
-          theme.isDark
-            ? 'radial-gradient(103.12% 50% at 50% 50%, #21193A 0%, #191326 100%)'
+          true
+            ? 'rgb(1,0,22) linear-gradient(39deg, rgba(1,0,22,1) 8%, rgba(25,25,112,1) 64%, rgba(95,68,186,0.9332107843137255) 78%, rgba(51,33,115,0.9500175070028011) 93%);'
             : 'linear-gradient(139.73deg, #E6FDFF 0%, #F3EFFF 100%)'
         }
         index={2}
         hasCurvedDivider={false}
+        className="transparent"
+        // color= "#fff !important;"
       >
-        {account && (
-          <UserBannerWrapper>
-            <UserBanner />
-          </UserBannerWrapper>
-        )}
-        <MultipleBanner />
+        
         <Hero />
       </StyledHeroSection>
-      <PageSection
+      {/* <PageSection
         innerProps={{ style: { margin: '0', width: '100%' } }}
         background={
           theme.isDark
@@ -79,9 +104,41 @@ const Home: React.FC = () => {
         }
         index={2}
         hasCurvedDivider={false}
+        className="transparent"
+      > */}
+        {/* <ProtocolUpdater /> */}
+      {/* <PoolUpdater /> */}
+      {/* <TokenUpdater /> */}
+      {/* <InfoNav /> */}
+      {/* <Route path="/info" exact> */}
+        {/* <Overview /> */}
+      {/* </Route> */}
+      {/* <Route path="/info/pools" exact> */}
+        {/* <Pools /> */}
+      {/* </Route> */}
+      {/* <Route path="/info/tokens" exact> */}
+        {/* <Tokens /> */}
+      {/* </Route> */}
+      {/* <Route exact path={['/info/tokens/:address', '/info/token/:address']} component={RedirectInvalidToken} /> */}
+      {/* <Route exact path={['/info/pools/:address', '/info/pool/:address', '/info/pair/:address']} component={PoolPage} /> */}
+
+        {/* <MetricsSection /> */}
+      {/* </PageSection> */}
+      {/* <PageSection 
+      innerProps={{ style: { margin: '0', width: '100%' } }}
+      background={
+        theme.isDark
+          ? 'linear-gradient(180deg, #09070C 22%, #201335 100%)'
+          : 'linear-gradient(180deg, #FFFFFF 22%, #D7CAEC 100%)'
+      }
+      index={2}
+      hasCurvedDivider={false}
+      className="transparent"
       >
-        <MetricsSection />
-      </PageSection>
+      <AddLiquidity />
+      </PageSection> */}
+      
+      {/*
       <PageSection
         innerProps={{ style: HomeSectionContainerStyles }}
         background={theme.colors.background}
@@ -92,23 +149,23 @@ const Home: React.FC = () => {
           <InnerWedgeWrapper top fill={theme.isDark ? '#201335' : '#D8CBED'}>
             <WedgeTopLeft />
           </InnerWedgeWrapper>
-        </OuterWedgeWrapper>
-        <SalesSection {...swapSectionData(t)} />
+        </OuterWedgeWrapper> */}
+        {/* <SalesSection {...swapSectionData} />
       </PageSection>
       <PageSection
         innerProps={{ style: HomeSectionContainerStyles }}
         background={theme.colors.gradients.cardHeader}
         index={2}
         hasCurvedDivider={false}
-      >
-        <OuterWedgeWrapper>
-          <InnerWedgeWrapper width="150%" top fill={theme.colors.background}>
-            <WedgeTopRight />
-          </InnerWedgeWrapper>
-        </OuterWedgeWrapper>
-        <SalesSection {...earnSectionData(t)} />
-        <FarmsPoolsRow />
-      </PageSection>
+      > */}
+        {/* <OuterWedgeWrapper> */}
+          {/* <InnerWedgeWrapper width="150%" top fill={theme.colors.background}> */}
+            {/* <WedgeTopRight /> */}
+          {/* </InnerWedgeWrapper> */}
+        {/* </OuterWedgeWrapper> */}
+        {/* <SalesSection {...earnSectionData} /> */}
+        {/* <FarmsPoolsRow /> */}
+      {/* </PageSection>
       <PageSection
         innerProps={{ style: HomeSectionContainerStyles }}
         background={
@@ -118,26 +175,26 @@ const Home: React.FC = () => {
         }
         index={2}
         hasCurvedDivider={false}
-      >
-        <WinSection />
-      </PageSection>
+      > */}
+        {/* <WinSection /> */}
+      {/* </PageSection>
       <PageSection
         innerProps={{ style: HomeSectionContainerStyles }}
         background={theme.colors.background}
         index={2}
         hasCurvedDivider={false}
-      >
-        <SalesSection {...cakeSectionData(t)} />
-        <CakeDataRow />
-      </PageSection>
+      > */}
+        {/* <SalesSection {...cakeSectionData} /> */}
+        {/* <CakeDataRow /> */}
+      {/* </PageSection>
       <PageSection
         innerProps={{ style: HomeSectionContainerStyles }}
         background="linear-gradient(180deg, #7645D9 0%, #5121B1 100%)"
         index={2}
         hasCurvedDivider={false}
-      >
-        <Footer />
-      </PageSection>
+      > */}
+        {/* <Footer /> */}
+      {/* </PageSection> */}
     </>
   )
 }

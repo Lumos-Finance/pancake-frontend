@@ -1,6 +1,6 @@
 import { request, gql } from 'graphql-request'
 import { GRAPH_API_PREDICTION } from 'config/constants/endpoints'
-import { BigNumber } from '@ethersproject/bignumber'
+import { ethers } from 'ethers'
 import {
   Bet,
   LedgerData,
@@ -18,7 +18,6 @@ import { multicallv2 } from 'utils/multicall'
 import { getPredictionsContract } from 'utils/contractHelpers'
 import predictionsAbi from 'config/abi/predictions.json'
 import { getPredictionsAddress } from 'utils/addressHelpers'
-import { Zero } from '@ethersproject/constants'
 import { PredictionsClaimableResponse, PredictionsLedgerResponse, PredictionsRoundsResponse } from 'utils/types'
 import {
   BetResponse,
@@ -312,17 +311,6 @@ const defaultPredictionUserOptions = {
   orderDir: 'desc',
 }
 
-export const getHasRoundFailed = (oracleCalled: boolean, closeTimestamp: number, buffer: number) => {
-  if (!oracleCalled) {
-    const closeTimestampMs = (closeTimestamp + buffer) * 1000
-    if (Number.isFinite(closeTimestampMs)) {
-      return Date.now() > closeTimestampMs
-    }
-  }
-
-  return false
-}
-
 export const getPredictionUsers = async (options: GetPredictionUsersOptions = {}): Promise<UserResponse[]> => {
   const { first, skip, where, orderBy, orderDir } = { ...defaultPredictionUserOptions, ...options }
   const response = await request(
@@ -379,20 +367,27 @@ export const getClaimStatuses = async (
   }, {})
 }
 
-export type MarketData = Pick<PredictionsState, 'status' | 'currentEpoch' | 'intervalSeconds' | 'minBetAmount'>
+export type MarketData = Pick<
+  PredictionsState,
+  'status' | 'currentEpoch' | 'intervalSeconds' | 'minBetAmount' | 'bufferSeconds'
+>
 export const getPredictionData = async (): Promise<MarketData> => {
   const address = getPredictionsAddress()
-  const staticCalls = ['currentEpoch', 'intervalSeconds', 'minBetAmount', 'paused'].map((method) => ({
+  const staticCalls = ['currentEpoch', 'intervalSeconds', 'minBetAmount', 'paused', 'bufferSeconds'].map((method) => ({
     address,
     name: method,
   }))
-  const [[currentEpoch], [intervalSeconds], [minBetAmount], [paused]] = await multicallv2(predictionsAbi, staticCalls)
+  const [[currentEpoch], [intervalSeconds], [minBetAmount], [paused], [bufferSeconds]] = await multicallv2(
+    predictionsAbi,
+    staticCalls,
+  )
 
   return {
     status: paused ? PredictionStatus.PAUSED : PredictionStatus.LIVE,
     currentEpoch: currentEpoch.toNumber(),
     intervalSeconds: intervalSeconds.toNumber(),
     minBetAmount: minBetAmount.toString(),
+    bufferSeconds: bufferSeconds.toNumber(),
   }
 }
 
@@ -415,11 +410,11 @@ export const makeFutureRoundResponse = (epoch: number, startTimestamp: number): 
     closeTimestamp: null,
     lockPrice: null,
     closePrice: null,
-    totalAmount: Zero.toJSON(),
-    bullAmount: Zero.toJSON(),
-    bearAmount: Zero.toJSON(),
-    rewardBaseCalAmount: Zero.toJSON(),
-    rewardAmount: Zero.toJSON(),
+    totalAmount: ethers.BigNumber.from(0).toJSON(),
+    bullAmount: ethers.BigNumber.from(0).toJSON(),
+    bearAmount: ethers.BigNumber.from(0).toJSON(),
+    rewardBaseCalAmount: ethers.BigNumber.from(0).toJSON(),
+    rewardAmount: ethers.BigNumber.from(0).toJSON(),
     oracleCalled: false,
     lockOracleId: null,
     closeOracleId: null,
@@ -504,8 +499,8 @@ export const serializePredictionsRoundsResponse = (response: PredictionsRoundsRe
 }
 
 /**
- * Parse serialized values back into BigNumber
- * BigNumber values are stored with the "toJSON()" method, e.g  { type: "BigNumber", hex: string }
+ * Parse serialized values back into ethers.BigNumber
+ * ethers.BigNumber values are stored with the "toJSON()" method, e.g  { type: "BigNumber", hex: string }
  */
 export const parseBigNumberObj = <T = Record<string, any>, K = Record<string, any>>(data: T): K => {
   return Object.keys(data).reduce((accum, key) => {
@@ -514,7 +509,7 @@ export const parseBigNumberObj = <T = Record<string, any>, K = Record<string, an
     if (value && value?.type === 'BigNumber') {
       return {
         ...accum,
-        [key]: BigNumber.from(value),
+        [key]: ethers.BigNumber.from(value),
       }
     }
 
@@ -531,7 +526,7 @@ export const fetchUsersRoundsLength = async (account: string) => {
     const length = await contract.getUserRoundsLength(account)
     return length
   } catch {
-    return Zero
+    return ethers.BigNumber.from(0)
   }
 }
 

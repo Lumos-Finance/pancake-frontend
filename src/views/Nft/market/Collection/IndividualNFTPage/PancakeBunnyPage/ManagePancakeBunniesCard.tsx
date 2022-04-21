@@ -1,3 +1,4 @@
+import React from 'react'
 import styled from 'styled-components'
 import {
   Box,
@@ -13,16 +14,16 @@ import {
   useModal,
 } from '@pancakeswap/uikit'
 import { useWeb3React } from '@web3-react/core'
-import { useProfile } from 'state/profile/hooks'
-import { NftLocation, NftToken } from 'state/nftMarket/types'
+import { useUserNfts } from 'state/nftMarket/hooks'
+import { NftLocation, NftToken, UserNftInitializationState } from 'state/nftMarket/types'
 import { formatNumber } from 'utils/formatBalance'
 import ConnectWalletButton from 'components/ConnectWalletButton'
 import { useTranslation } from 'contexts/Localization'
 import ExpandableCard from '../shared/ExpandableCard'
+import useFetchUserNfts from '../../../Profile/hooks/useFetchUserNfts'
 import SellModal from '../../../components/BuySellModals/SellModal'
 import ProfileNftModal from '../../../components/ProfileNftModal'
 import { SmallRoundedImage, CollectibleRowContainer } from '../shared/styles'
-import useNftsForAddress from '../../../hooks/useNftsForAddress'
 
 const ScrollableContainer = styled(Box)`
   overflow-y: auto;
@@ -49,14 +50,13 @@ const LocationIcons = {
 interface CollectibleRowProps {
   nft: NftToken
   lowestPrice: string
-  onSuccessSale: () => void
 }
 
-const CollectibleRow: React.FC<CollectibleRowProps> = ({ nft, lowestPrice, onSuccessSale }) => {
+const CollectibleRow: React.FC<CollectibleRowProps> = ({ nft, lowestPrice }) => {
   const { t } = useTranslation()
   const modalVariant = nft.location === NftLocation.WALLET ? 'sell' : 'edit'
   const [onPresentProfileNftModal] = useModal(<ProfileNftModal nft={nft} />)
-  const [onPresentModal] = useModal(<SellModal variant={modalVariant} nftToSell={nft} onSuccessSale={onSuccessSale} />)
+  const [onPresentModal] = useModal(<SellModal variant={modalVariant} nftToSell={nft} />)
   return (
     <CollectibleRowContainer
       gridTemplateColumns="96px 1fr"
@@ -69,7 +69,7 @@ const CollectibleRow: React.FC<CollectibleRowProps> = ({ nft, lowestPrice, onSuc
       <Grid gridTemplateColumns="1fr 1fr">
         <Text bold>{nft.name}</Text>
         <Text fontSize="12px" color="textSubtle" textAlign="right">
-          {nft?.collectionName}
+          {nft.collectionName}
         </Text>
         {lowestPrice && (
           <>
@@ -89,7 +89,7 @@ const CollectibleRow: React.FC<CollectibleRowProps> = ({ nft, lowestPrice, onSuc
             </Text>
             <Flex justifySelf="flex-end" width="max-content">
               <BinanceIcon width="16px" height="16px" mr="4px" />
-              <Text small>{nft?.marketData?.currentAskPrice}</Text>
+              <Text small>{nft.marketData.currentAskPrice}</Text>
             </Flex>
           </>
         ) : (
@@ -106,15 +106,9 @@ interface CollectiblesByLocationProps {
   location: NftLocation
   nfts: NftToken[]
   lowestPrice: string
-  onSuccessSale: () => void
 }
 
-const CollectiblesByLocation: React.FC<CollectiblesByLocationProps> = ({
-  location,
-  nfts,
-  lowestPrice,
-  onSuccessSale,
-}) => {
+const CollectiblesByLocation: React.FC<CollectiblesByLocationProps> = ({ location, nfts, lowestPrice }) => {
   const { t } = useTranslation()
   const IconComponent = LocationIcons[location]
   return (
@@ -127,7 +121,7 @@ const CollectiblesByLocation: React.FC<CollectiblesByLocationProps> = ({
       </Grid>
       <ScrollableContainer>
         {nfts.map((nft) => (
-          <CollectibleRow key={nft.tokenId} nft={nft} lowestPrice={lowestPrice} onSuccessSale={onSuccessSale} />
+          <CollectibleRow key={nft.tokenId} nft={nft} lowestPrice={lowestPrice} />
         ))}
       </ScrollableContainer>
     </Flex>
@@ -142,9 +136,8 @@ interface ManagePancakeBunniesCardProps {
 const ManagePancakeBunniesCard: React.FC<ManagePancakeBunniesCardProps> = ({ bunnyId, lowestPrice }) => {
   const { t } = useTranslation()
   const { account } = useWeb3React()
-
-  const { isLoading: isProfileLoading, profile } = useProfile()
-  const { nfts: userNfts, isLoading, refresh } = useNftsForAddress(account, profile, isProfileLoading)
+  const { userNftsInitializationState, nfts: userNfts } = useUserNfts()
+  useFetchUserNfts()
 
   const bunniesInWallet = userNfts.filter(
     (nft) => nft.attributes[0].value === bunnyId && nft.location === NftLocation.WALLET,
@@ -156,8 +149,9 @@ const ManagePancakeBunniesCard: React.FC<ManagePancakeBunniesCardProps> = ({ bun
     (nft) => nft.attributes[0].value === bunnyId && nft.location === NftLocation.PROFILE,
   )
 
+  const loading = userNftsInitializationState !== UserNftInitializationState.INITIALIZED
   const useHasNoBunnies =
-    !isLoading && bunniesInWallet.length === 0 && bunniesForSale.length === 0 && profilePicBunny.length === 0
+    !loading && bunniesInWallet.length === 0 && bunniesForSale.length === 0 && profilePicBunny.length === 0
   const totalBunnies = bunniesInWallet.length + bunniesForSale.length + profilePicBunny.length
   const totalBunniesText = account && !useHasNoBunnies ? ` (${totalBunnies})` : ''
 
@@ -168,12 +162,12 @@ const ManagePancakeBunniesCard: React.FC<ManagePancakeBunniesCardProps> = ({ bun
           <ConnectWalletButton />
         </Flex>
       )}
-      {account && useHasNoBunnies && (
+      {useHasNoBunnies && (
         <Text px="16px" pb="16px" color="textSubtle">
           {t('You don’t have any of this item.')}
         </Text>
       )}
-      {account && isLoading && (
+      {account && loading && (
         <Box px="16px" pb="8px">
           <Skeleton mb="8px" />
           <Skeleton mb="8px" />
@@ -181,33 +175,18 @@ const ManagePancakeBunniesCard: React.FC<ManagePancakeBunniesCardProps> = ({ bun
         </Box>
       )}
       {bunniesForSale.length > 0 && (
-        <CollectiblesByLocation
-          location={NftLocation.FORSALE}
-          nfts={bunniesForSale}
-          lowestPrice={lowestPrice}
-          onSuccessSale={refresh}
-        />
+        <CollectiblesByLocation location={NftLocation.FORSALE} nfts={bunniesForSale} lowestPrice={lowestPrice} />
       )}
       {bunniesInWallet.length > 0 && (
         <>
           {bunniesForSale.length > 0 && <Divider />}
-          <CollectiblesByLocation
-            location={NftLocation.WALLET}
-            nfts={bunniesInWallet}
-            lowestPrice={lowestPrice}
-            onSuccessSale={refresh}
-          />
+          <CollectiblesByLocation location={NftLocation.WALLET} nfts={bunniesInWallet} lowestPrice={lowestPrice} />
         </>
       )}
       {profilePicBunny.length > 0 && (
         <>
           {(bunniesForSale.length > 0 || bunniesInWallet.length > 0) && <Divider />}
-          <CollectiblesByLocation
-            location={NftLocation.PROFILE}
-            nfts={profilePicBunny}
-            lowestPrice={lowestPrice}
-            onSuccessSale={refresh}
-          />
+          <CollectiblesByLocation location={NftLocation.PROFILE} nfts={profilePicBunny} lowestPrice={lowestPrice} />
         </>
       )}
     </Box>

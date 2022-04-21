@@ -23,7 +23,7 @@ describe('NFTs Page', () => {
   it('loads NFTs collections', () => {
     cy.visit('/nfts/collections')
     cy.getBySel('nft-collections-title').should('be.visible')
-    cy.getBySel('hot-collection-card').should('have.length.at.least', 9)
+    cy.getBySel('nft-collection-row').should('have.length.at.least', 10)
   })
 
   // activity

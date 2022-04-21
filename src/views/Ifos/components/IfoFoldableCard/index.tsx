@@ -9,25 +9,31 @@ import {
   useMatchBreakpoints,
 } from '@pancakeswap/uikit'
 import { useWeb3React } from '@web3-react/core'
+import BigNumber from 'bignumber.js'
+import {  Route } from 'react-router-dom'
+
+
+
 import { ToastDescriptionWithTx } from 'components/Toast'
 import { Ifo, PoolIds } from 'config/constants/types'
 import { useTranslation } from 'contexts/Localization'
 import { useERC20 } from 'hooks/useContract'
+import { useFastFresh } from 'hooks/useRefresh'
 import useToast from 'hooks/useToast'
-import { useEffect, useState } from 'react'
-import { useCurrentBlock } from 'state/block/hooks'
+import React, { useEffect, useState } from 'react'
+import { useBlock } from 'state/block/hooks'
 import styled from 'styled-components'
-import { requiresApproval } from 'utils/requiresApproval'
-import { useFastRefreshEffect } from 'hooks/useRefreshEffect'
-import useCatchTxError from 'hooks/useCatchTxError'
-import useIsWindowVisible from 'hooks/useIsWindowVisible'
 import { PublicIfoData, WalletIfoData } from 'views/Ifos/types'
+import useIsWindowVisible from '../../../../hooks/useIsWindowVisible'
 import useIfoApprove from '../../hooks/useIfoApprove'
 import IfoAchievement from './Achievement'
 import IfoPoolCard from './IfoPoolCard'
 import { EnableStatus } from './types'
 import { IfoRibbon } from './IfoRibbon'
-import { CardsWrapper } from '../IfoCardStyles'
+import Swap from '../../../Page'
+import './styles.css'
+import Navegation2 from '../../../../components/Navegation2'
+
 
 interface IfoFoldableCardProps {
   ifo: Ifo
@@ -53,7 +59,7 @@ const StyledCard = styled(Card)<{ $isCurrent?: boolean }>`
   `}
 
   > div {
-    background: ${({ theme, $isCurrent }) => ($isCurrent ? theme.colors.gradients.bubblegum : theme.colors.dropdown)};
+    background: transparent!important;
   }
 
   ${({ theme }) => theme.mediaQueries.sm} {
@@ -77,23 +83,34 @@ const Header = styled(CardHeader)<{ ifoId: string; $isCurrent?: boolean }>`
   background-position: center;
   border-top-left-radius: 32px;
   border-top-right-radius: 32px;
-  background-color: ${({ theme }) => theme.colors.dropdown};
-  background-image: ${({ ifoId }) => `url('/images/ifos/${ifoId}-bg.svg'), url('/images/ifos/${ifoId}-bg.png')`};
   ${({ theme }) => theme.mediaQueries.md} {
     height: 112px;
   }
 `
+// background-image: ${({ ifoId }) => `url('/images/ifos/${ifoId}-bg.svg'), url('/images/ifos/${ifoId}-bg.png')`};
 
-export const StyledCardBody = styled(CardBody)`
+const CardsWrapper = styled.div<{ singleCard: boolean }>`
+  display: grid;
+  grid-gap: 32px;
+  grid-template-columns: 1fr;
+  ${({ theme }) => theme.mediaQueries.xxl} {
+    grid-template-columns: ${({ singleCard }) => (singleCard ? '1fr' : '1fr 1fr')};
+    justify-items: ${({ singleCard }) => (singleCard ? 'center' : 'unset')};
+  }
+  background: transparent;
+`
+
+const StyledCardBody = styled(CardBody)`
   padding: 24px 16px;
   ${({ theme }) => theme.mediaQueries.md} {
     padding: 24px;
   }
+  background: red;
 `
 
 const StyledCardFooter = styled(CardFooter)`
   padding: 0;
-  background: ${({ theme }) => theme.colors.backgroundAlt};
+  background: transparent;
   text-align: center;
 `
 
@@ -116,7 +133,7 @@ const StyledNoHatBunny = styled.div<{ $isLive: boolean; $isCurrent?: boolean }>`
     right: ${({ $isCurrent }) => ($isCurrent ? '17px' : '90px')};
 
     > img {
-      width: 123px;
+      width: 80px;
     }
   }
   ${({ theme }) => theme.mediaQueries.lg} {
@@ -162,30 +179,30 @@ export const IfoCurrentCard = ({
   return (
     <>
       {isMobile && (
-        <Box
+        <Box 
           className="sticky-header"
-          position="sticky"
           bottom="48px"
           width="100%"
-          zIndex={6}
           maxWidth={['400px', '400px', '400px', '100%']}
         >
-          <Header $isCurrent ifoId={ifo.id} />
+          {/* <Header $isCurrent ifoId={ifo.id} /> */}
           <IfoRibbon publicIfoData={publicIfoData} />
           {shouldShowBunny && <NoHatBunny isLive={publicIfoData.status === 'live'} />}
+         
         </Box>
       )}
-      <Box position="relative" width="100%" maxWidth={['400px', '400px', '400px', '100%']}>
+      
+      <Box className='glass' position="relative" width="100%" maxWidth={['400px', '400px', '400px', '100%']}>
         {!isMobile && shouldShowBunny && <NoHatBunny isCurrent isLive={publicIfoData.status === 'live'} />}
-        <StyledCard $isCurrent>
+        <StyledCard className='transparent'  $isCurrent>
           {!isMobile && (
-            <>
-              <Header $isCurrent ifoId={ifo.id} />
+            <div className='_header_card'>
+              {/* <Header $isCurrent ifoId={ifo.id} /> */}
               <IfoRibbon publicIfoData={publicIfoData} />
-            </>
+            </div>
           )}
-          <IfoCard ifo={ifo} publicIfoData={publicIfoData} walletIfoData={walletIfoData} />
-          <StyledCardFooter>
+          <IfoCard  ifo={ifo} publicIfoData={publicIfoData} walletIfoData={walletIfoData} />
+          <StyledCardFooter className='transparent '>
             <ExpandableLabel expanded={isExpanded} onClick={() => setIsExpanded(!isExpanded)}>
               {isExpanded ? t('Hide') : t('Details')}
             </ExpandableLabel>
@@ -193,6 +210,7 @@ export const IfoCurrentCard = ({
           </StyledCardFooter>
         </StyledCard>
       </Box>
+      
     </>
   )
 }
@@ -238,7 +256,7 @@ const IfoFoldableCard = ({
 }
 
 const IfoCard: React.FC<IfoFoldableCardProps> = ({ ifo, publicIfoData, walletIfoData }) => {
-  const currentBlock = useCurrentBlock()
+  const { currentBlock } = useBlock()
   const { fetchIfoData: fetchPublicIfoData, isInitialized: isPublicIfoDataInitialized, secondsUntilEnd } = publicIfoData
   const {
     contract,
@@ -249,14 +267,14 @@ const IfoCard: React.FC<IfoFoldableCardProps> = ({ ifo, publicIfoData, walletIfo
   const [enableStatus, setEnableStatus] = useState(EnableStatus.DISABLED)
   const { t } = useTranslation()
   const { account } = useWeb3React()
-  const raisingTokenContract = useERC20(ifo.currency.address, false)
+  const raisingTokenContract = useERC20(ifo.currency.address)
   // Continue to fetch 2 more minutes to get latest data
   const isRecentlyActive =
     (publicIfoData.status !== 'finished' || (publicIfoData.status === 'finished' && secondsUntilEnd >= -120)) &&
     ifo.isActive
-  const onApprove = useIfoApprove(ifo, contract.address)
-  const { toastSuccess } = useToast()
-  const { fetchWithCatchTxError } = useCatchTxError()
+  const onApprove = useIfoApprove(raisingTokenContract, contract.address)
+  const { toastSuccess, toastError } = useToast()
+  const fastRefresh = useFastFresh()
   const isWindowVisible = useIsWindowVisible()
 
   useEffect(() => {
@@ -265,7 +283,7 @@ const IfoCard: React.FC<IfoFoldableCardProps> = ({ ifo, publicIfoData, walletIfo
     }
   }, [isRecentlyActive, isPublicIfoDataInitialized, fetchPublicIfoData, currentBlock])
 
-  useFastRefreshEffect(() => {
+  useEffect(() => {
     if (isWindowVisible && (isRecentlyActive || !isWalletDataInitialized)) {
       if (account) {
         fetchWalletIfoData()
@@ -275,30 +293,55 @@ const IfoCard: React.FC<IfoFoldableCardProps> = ({ ifo, publicIfoData, walletIfo
     if (!account && isWalletDataInitialized) {
       resetWalletIfoData()
     }
-  }, [isWindowVisible, account, isRecentlyActive, isWalletDataInitialized, fetchWalletIfoData, resetWalletIfoData])
+  }, [
+    isWindowVisible,
+    account,
+    isRecentlyActive,
+    isWalletDataInitialized,
+    fetchWalletIfoData,
+    resetWalletIfoData,
+    fastRefresh,
+  ])
 
   const handleApprove = async () => {
-    const receipt = await fetchWithCatchTxError(() => {
+    try {
       setEnableStatus(EnableStatus.IS_ENABLING)
-      return onApprove()
-    })
-    if (receipt?.status) {
-      toastSuccess(
-        t('Successfully Enabled!'),
-        <ToastDescriptionWithTx txHash={receipt.transactionHash}>
-          {t('You can now participate in the %symbol% IFO.', { symbol: ifo.token.symbol })}
-        </ToastDescriptionWithTx>,
+      await onApprove(
+        (tx) => {
+          toastSuccess(`${t('Transaction Submitted')}!`, <ToastDescriptionWithTx txHash={tx.hash} />)
+        },
+        (receipt) => {
+          toastSuccess(
+            t('Successfully Enabled!'),
+            <ToastDescriptionWithTx txHash={receipt.transactionHash}>
+              {t('You can now participate in the %symbol% IFO.', { symbol: ifo.token.symbol })}
+            </ToastDescriptionWithTx>,
+          )
+        },
+        (receipt) => {
+          toastError(
+            t('Error'),
+            <ToastDescriptionWithTx txHash={receipt.transactionHash}>
+              {t('Please try again. Confirm the transaction and make sure you are paying enough gas!')}
+            </ToastDescriptionWithTx>,
+          )
+        },
       )
       setEnableStatus(EnableStatus.ENABLED)
-    } else {
+    } catch (error) {
       setEnableStatus(EnableStatus.DISABLED)
     }
   }
 
   useEffect(() => {
     const checkAllowance = async () => {
-      const approvalRequired = await requiresApproval(raisingTokenContract, account, contract.address)
-      setEnableStatus(approvalRequired ? EnableStatus.DISABLED : EnableStatus.ENABLED)
+      try {
+        const response = await raisingTokenContract.allowance(account, contract.address)
+        const currentAllowance = new BigNumber(response.toString())
+        setEnableStatus(currentAllowance.lte(0) ? EnableStatus.DISABLED : EnableStatus.ENABLED)
+      } catch (error) {
+        setEnableStatus(EnableStatus.DISABLED)
+      }
     }
 
     if (account) {
@@ -307,12 +350,12 @@ const IfoCard: React.FC<IfoFoldableCardProps> = ({ ifo, publicIfoData, walletIfo
   }, [account, raisingTokenContract, contract, setEnableStatus])
 
   return (
-    <>
-      <StyledCardBody>
-        <CardsWrapper
-          shouldReverse={ifo.version === 3.1}
-          singleCard={!publicIfoData.poolBasic || !walletIfoData.poolBasic}
-        >
+    
+    
+    <div className='transparent'>
+    {/* <Navegation2 /> */}
+      <div className='transparent'>
+        <CardsWrapper className='transparent change' singleCard={!publicIfoData.poolBasic || !walletIfoData.poolBasic}>
           {publicIfoData.poolBasic && walletIfoData.poolBasic && (
             <IfoPoolCard
               poolId={PoolIds.poolBasic}
@@ -332,8 +375,9 @@ const IfoCard: React.FC<IfoFoldableCardProps> = ({ ifo, publicIfoData, walletIfo
             enableStatus={enableStatus}
           />
         </CardsWrapper>
-      </StyledCardBody>
-    </>
+      </div>
+    </div>
+    
   )
 }
 

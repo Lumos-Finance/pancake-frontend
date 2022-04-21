@@ -1,5 +1,4 @@
-import { useState } from 'react'
-import { useWeb3React } from '@web3-react/core'
+import React, { useState } from 'react'
 import {
   Modal,
   Text,
@@ -18,9 +17,7 @@ import useToast from 'hooks/useToast'
 import { ToastDescriptionWithTx } from 'components/Toast'
 import { Token } from '@pancakeswap/sdk'
 import { formatNumber } from 'utils/formatBalance'
-import useCatchTxError from 'hooks/useCatchTxError'
-import { updateUserBalance, updateUserPendingReward, updateUserStakedBalance } from 'state/pools'
-import { useAppDispatch } from 'state'
+import { logError } from 'utils/sentry'
 import useHarvestPool from '../../../hooks/useHarvestPool'
 import useStakePool from '../../../hooks/useStakePool'
 
@@ -47,12 +44,10 @@ const CollectModal: React.FC<CollectModalProps> = ({
 }) => {
   const { t } = useTranslation()
   const { theme } = useTheme()
-  const { toastSuccess } = useToast()
-  const { account } = useWeb3React()
-  const dispatch = useAppDispatch()
-  const { fetchWithCatchTxError, loading: pendingTx } = useCatchTxError()
+  const { toastSuccess, toastError } = useToast()
   const { onReward } = useHarvestPool(sousId, isBnbPool)
   const { onStake } = useStakePool(sousId, isBnbPool)
+  const [pendingTx, setPendingTx] = useState(false)
   const [shouldCompound, setShouldCompound] = useState(isCompoundPool)
   const { targetRef, tooltip, tooltipVisible } = useTooltip(
     <>
@@ -63,32 +58,73 @@ const CollectModal: React.FC<CollectModalProps> = ({
   )
 
   const handleHarvestConfirm = async () => {
-    const receipt = await fetchWithCatchTxError(() => {
-      if (shouldCompound) {
-        return onStake(fullBalance, earningToken.decimals)
-      }
-      return onReward()
-    })
-    if (receipt?.status) {
-      if (shouldCompound) {
-        toastSuccess(
-          `${t('Compounded')}!`,
-          <ToastDescriptionWithTx txHash={receipt.transactionHash}>
-            {t('Your %symbol% earnings have been re-invested into the pool!', { symbol: earningToken.symbol })}
-          </ToastDescriptionWithTx>,
+    setPendingTx(true)
+    // compounding
+    if (shouldCompound) {
+      try {
+        await onStake(
+          fullBalance,
+          earningToken.decimals,
+          (tx) => {
+            toastSuccess(`${t('Transaction Submitted')}!`, <ToastDescriptionWithTx txHash={tx.hash} />)
+          },
+          (receipt) => {
+            toastSuccess(
+              `${t('Compounded')}!`,
+              <ToastDescriptionWithTx txHash={receipt.transactionHash}>
+                {t('Your %symbol% earnings have been re-invested into the pool!', { symbol: earningToken.symbol })}
+              </ToastDescriptionWithTx>,
+            )
+          },
+          (receipt) => {
+            toastError(
+              t('Error'),
+              <ToastDescriptionWithTx txHash={receipt.transactionHash}>
+                {t('Please try again. Confirm the transaction and make sure you are paying enough gas!')}
+              </ToastDescriptionWithTx>,
+            )
+          },
         )
-      } else {
-        toastSuccess(
-          `${t('Harvested')}!`,
-          <ToastDescriptionWithTx txHash={receipt.transactionHash}>
-            {t('Your %symbol% earnings have been sent to your wallet!', { symbol: earningToken.symbol })}
-          </ToastDescriptionWithTx>,
-        )
+
+        setPendingTx(false)
+        onDismiss()
+      } catch (e) {
+        toastError(t('Error'), t('Please try again. Confirm the transaction and make sure you are paying enough gas!'))
+        logError(e)
+        setPendingTx(false)
       }
-      dispatch(updateUserStakedBalance(sousId, account))
-      dispatch(updateUserPendingReward(sousId, account))
-      dispatch(updateUserBalance(sousId, account))
-      onDismiss?.()
+    } else {
+      // harvesting
+      try {
+        await onReward(
+          (tx) => {
+            toastSuccess(`${t('Transaction Submitted')}!`, <ToastDescriptionWithTx txHash={tx.hash} />)
+          },
+          (receipt) => {
+            toastSuccess(
+              `${t('Harvested')}!`,
+              <ToastDescriptionWithTx txHash={receipt.transactionHash}>
+                {t('Your %symbol% earnings have been sent to your wallet!', { symbol: earningToken.symbol })}
+              </ToastDescriptionWithTx>,
+            )
+          },
+          (receipt) => {
+            toastError(
+              t('Error'),
+              <ToastDescriptionWithTx txHash={receipt.transactionHash}>
+                {t('Please try again. Confirm the transaction and make sure you are paying enough gas!')}
+              </ToastDescriptionWithTx>,
+            )
+          },
+        )
+
+        setPendingTx(false)
+        onDismiss()
+      } catch (e) {
+        toastError(t('Error'), t('Please try again. Confirm the transaction and make sure you are paying enough gas!'))
+        logError(e)
+        setPendingTx(false)
+      }
     }
   }
 

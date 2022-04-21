@@ -1,6 +1,6 @@
 import { BlockIcon, CheckmarkCircleIcon, Flex, Image, Skeleton, Text } from '@pancakeswap/uikit'
 import { useTranslation } from 'contexts/Localization'
-
+import React from 'react'
 import styled from 'styled-components'
 import { getRewardGroupAchievements, useCompetitionRewards } from '../../helpers'
 import { UserTradingInformationProps } from '../../types'
@@ -14,11 +14,20 @@ const UserPrizeGrid: React.FC<{ userTradingInformation?: UserTradingInformationP
   userTradingInformation,
 }) => {
   const { t } = useTranslation()
-  const { userRewardGroup, userCakeRewards, userMoboxRewards, userPointReward, canClaimMysteryBox, canClaimNFT } =
-    userTradingInformation
-  const { cakeReward, moboxReward, dollarValueOfTokensReward } = useCompetitionRewards({
+  const {
+    userRewardGroup,
     userCakeRewards,
-    userMoboxRewards,
+    userLazioRewards,
+    userPortoRewards,
+    userSantosRewards,
+    userPointReward,
+    canClaimNFT,
+  } = userTradingInformation
+  const { cakeReward, lazioReward, portoReward, santosReward, dollarValueOfTokensReward } = useCompetitionRewards({
+    userCakeRewards,
+    userLazioRewards,
+    userPortoRewards,
+    userSantosRewards,
   })
 
   const achievement = getRewardGroupAchievements(userRewardGroup, userPointReward)
@@ -30,7 +39,6 @@ const UserPrizeGrid: React.FC<{ userTradingInformation?: UserTradingInformationP
           <th>{t('Token Prizes')}</th>
           <th>{t('Achievements')}</th>
           <th>{t('NFT')}</th>
-          <th>{t('Mystery Box')}</th>
         </tr>
       </StyledThead>
       <tbody>
@@ -38,7 +46,9 @@ const UserPrizeGrid: React.FC<{ userTradingInformation?: UserTradingInformationP
           <BoldTd>
             <Flex flexDirection="column">
               <Text bold>{cakeReward.toFixed(4)} CAKE</Text>
-              <Text bold>{moboxReward.toFixed(4)} MBOX</Text>
+              <Text bold>{lazioReward.toFixed(4)} LAZIO</Text>
+              <Text bold>{portoReward.toFixed(4)} PORTO</Text>
+              <Text bold>{santosReward.toFixed(4)} SANTOS</Text>
               {dollarValueOfTokensReward !== null ? (
                 <Text fontSize="12px" color="textSubtle">
                   ~{dollarValueOfTokensReward.toFixed(2)} USD
@@ -57,7 +67,6 @@ const UserPrizeGrid: React.FC<{ userTradingInformation?: UserTradingInformationP
             </Flex>
           </Td>
           <Td>{canClaimNFT ? <CheckmarkCircleIcon color="success" /> : <BlockIcon color="textDisabled" />}</Td>
-          <Td>{canClaimMysteryBox ? <CheckmarkCircleIcon color="success" /> : <BlockIcon color="textDisabled" />}</Td>
         </tr>
       </tbody>
     </StyledPrizeTable>

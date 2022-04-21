@@ -1,14 +1,14 @@
-import { useCallback, useState, useMemo, useEffect, Fragment } from 'react'
+import React, { useCallback, useState, useMemo, useEffect } from 'react'
 import styled from 'styled-components'
-import { NextLinkFromReactRouter } from 'components/NextLink'
+import { Link } from 'react-router-dom'
 import { Text, Flex, Box, Skeleton, ArrowBackIcon, ArrowForwardIcon } from '@pancakeswap/uikit'
-import { formatAmount } from 'utils/formatInfoNumbers'
+import { formatAmount } from 'views/Info/utils/formatInfoNumbers'
 import { PoolData } from 'state/info/types'
-import { ITEMS_PER_INFO_TABLE_PAGE } from 'config/constants/info'
+import { ITEMS_PER_INFO_TABLES_PT } from 'config/constants/info'
 import { DoubleCurrencyLogo } from 'views/Info/components/CurrencyLogo'
 import { useTranslation } from 'contexts/Localization'
 import { ClickableColumnHeader, TableWrapper, PageButtons, Arrow, Break } from './shared'
-
+import './styles.css'
 /**
  *  Columns on different layouts
  *  5 = | # | Pool | TVL | Volume 24H | Volume 7D |
@@ -47,7 +47,7 @@ const ResponsiveGrid = styled.div`
   }
 `
 
-const LinkWrapper = styled(NextLinkFromReactRouter)`
+const LinkWrapper = styled(Link)`
   text-decoration: none;
   :hover {
     cursor: pointer;
@@ -86,7 +86,7 @@ const TableLoader: React.FC = () => (
 const DataRow = ({ poolData, index }: { poolData: PoolData; index: number }) => {
   return (
     <LinkWrapper to={`/info/pool/${poolData.address}`}>
-      <ResponsiveGrid>
+      <ResponsiveGrid className='content'>
         <Text>{index + 1}</Text>
         <Flex>
           <DoubleCurrencyLogo address0={poolData.token0.address} address1={poolData.token1.address} />
@@ -120,10 +120,10 @@ const PoolTable: React.FC<PoolTableProps> = ({ poolDatas, loading }) => {
   const [maxPage, setMaxPage] = useState(1)
   useEffect(() => {
     let extraPages = 1
-    if (poolDatas.length % ITEMS_PER_INFO_TABLE_PAGE === 0) {
+    if (poolDatas.length % ITEMS_PER_INFO_TABLES_PT === 0) {
       extraPages = 0
     }
-    setMaxPage(Math.floor(poolDatas.length / ITEMS_PER_INFO_TABLE_PAGE) + extraPages)
+    setMaxPage(Math.floor(poolDatas.length / ITEMS_PER_INFO_TABLES_PT) + extraPages)
   }, [poolDatas])
 
   const sortedPools = useMemo(() => {
@@ -137,7 +137,7 @@ const PoolTable: React.FC<PoolTableProps> = ({ poolDatas, loading }) => {
             }
             return -1
           })
-          .slice(ITEMS_PER_INFO_TABLE_PAGE * (page - 1), page * ITEMS_PER_INFO_TABLE_PAGE)
+          .slice(ITEMS_PER_INFO_TABLES_PT * (page - 1), page * ITEMS_PER_INFO_TABLES_PT)
       : []
   }, [page, poolDatas, sortDirection, sortField])
 
@@ -158,16 +158,16 @@ const PoolTable: React.FC<PoolTableProps> = ({ poolDatas, loading }) => {
   )
 
   return (
-    <TableWrapper>
+    <TableWrapper id="poolsTable" className='glass'>
       <ResponsiveGrid>
-        <Text color="secondary" fontSize="12px" bold>
+        <Text className="text" color="#21C797" fontSize="12px" bold>
           #
         </Text>
-        <Text color="secondary" fontSize="12px" bold textTransform="uppercase">
+        <Text color="#21C797" fontSize="12px" bold textTransform="uppercase">
           {t('Pool')}
         </Text>
         <ClickableColumnHeader
-          color="secondary"
+          color="#21C797"
           fontSize="12px"
           bold
           onClick={() => handleSort(SORT_FIELD.volumeUSD)}
@@ -176,7 +176,7 @@ const PoolTable: React.FC<PoolTableProps> = ({ poolDatas, loading }) => {
           {t('Volume 24H')} {arrow(SORT_FIELD.volumeUSD)}
         </ClickableColumnHeader>
         <ClickableColumnHeader
-          color="secondary"
+          color="#21C797"
           fontSize="12px"
           bold
           onClick={() => handleSort(SORT_FIELD.volumeUSDWeek)}
@@ -185,7 +185,7 @@ const PoolTable: React.FC<PoolTableProps> = ({ poolDatas, loading }) => {
           {t('Volume 7D')} {arrow(SORT_FIELD.volumeUSDWeek)}
         </ClickableColumnHeader>
         <ClickableColumnHeader
-          color="secondary"
+          color="#21C797"
           fontSize="12px"
           bold
           onClick={() => handleSort(SORT_FIELD.lpFees24h)}
@@ -194,7 +194,7 @@ const PoolTable: React.FC<PoolTableProps> = ({ poolDatas, loading }) => {
           {t('LP reward fees 24H')} {arrow(SORT_FIELD.lpFees24h)}
         </ClickableColumnHeader>
         <ClickableColumnHeader
-          color="secondary"
+          color="#21C797"
           fontSize="12px"
           bold
           onClick={() => handleSort(SORT_FIELD.lpApr7d)}
@@ -203,7 +203,7 @@ const PoolTable: React.FC<PoolTableProps> = ({ poolDatas, loading }) => {
           {t('LP reward APR')} {arrow(SORT_FIELD.lpApr7d)}
         </ClickableColumnHeader>
         <ClickableColumnHeader
-          color="secondary"
+          color="#21C797"
           fontSize="12px"
           bold
           onClick={() => handleSort(SORT_FIELD.liquidityUSD)}
@@ -218,10 +218,10 @@ const PoolTable: React.FC<PoolTableProps> = ({ poolDatas, loading }) => {
           {sortedPools.map((poolData, i) => {
             if (poolData) {
               return (
-                <Fragment key={poolData.address}>
-                  <DataRow index={(page - 1) * ITEMS_PER_INFO_TABLE_PAGE + i} poolData={poolData} />
+                <React.Fragment key={poolData.address}>
+                  <DataRow index={(page - 1) * ITEMS_PER_INFO_TABLES_PT + i} poolData={poolData} />
                   <Break />
-                </Fragment>
+                </React.Fragment>
               )
             }
             return null
@@ -233,7 +233,7 @@ const PoolTable: React.FC<PoolTableProps> = ({ poolDatas, loading }) => {
                 setPage(page === 1 ? page : page - 1)
               }}
             >
-              <ArrowBackIcon color={page === 1 ? 'textDisabled' : 'primary'} />
+              <ArrowBackIcon color={page === 1 ? 'textDisabled' : '#21C797'} />
             </Arrow>
 
             <Text>{t('Page %page% of %maxPage%', { page, maxPage })}</Text>
@@ -243,7 +243,7 @@ const PoolTable: React.FC<PoolTableProps> = ({ poolDatas, loading }) => {
                 setPage(page === maxPage ? page : page + 1)
               }}
             >
-              <ArrowForwardIcon color={page === maxPage ? 'textDisabled' : 'primary'} />
+              <ArrowForwardIcon color={page === maxPage ? 'textDisabled' : '#21C797'} />
             </Arrow>
           </PageButtons>
         </>

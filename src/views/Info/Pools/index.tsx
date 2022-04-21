@@ -1,4 +1,4 @@
-import { useMemo } from 'react'
+import React, { useMemo } from 'react'
 import { Text, Heading, Card } from '@pancakeswap/uikit'
 import Page from 'components/Layout/Page'
 import PoolTable from 'views/Info/components/InfoTables/PoolsTable'
@@ -22,21 +22,25 @@ const PoolsOverview: React.FC = () => {
 
   return (
     <Page>
+      <div className="margin_b">
       <Heading scale="lg" mb="16px">
         {t('Your Watchlist')}
       </Heading>
-      <Card>
+      </div>
+      <div className='glass'>
         {watchlistPools.length > 0 ? (
           <PoolTable poolDatas={watchlistPools} />
         ) : (
-          <Text px="24px" py="16px">
+          <Text color="white" px="24px" py="16px">
             {t('Saved pools will appear here')}
           </Text>
         )}
-      </Card>
+      </div>
+      <div className='margin'>
       <Heading scale="lg" mt="40px" mb="16px" id="info-pools-title">
         {t('All Pools')}
       </Heading>
+      </div>
       <PoolTable poolDatas={poolDatas} />
     </Page>
   )

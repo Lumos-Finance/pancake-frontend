@@ -1,8 +1,9 @@
+import React from 'react'
 import { Flex, Button, Text } from '@pancakeswap/uikit'
 import QuestionHelper from 'components/QuestionHelper'
 import { useTranslation } from 'contexts/Localization'
+import { GAS_PRICE_GWEI, GAS_PRICE } from 'state/user/hooks/helpers'
 import { useGasPriceManager } from 'state/user/hooks'
-import { GAS_PRICE_GWEI, GAS_PRICE } from 'state/types'
 
 const GasSettings = () => {
   const { t } = useTranslation()
@@ -22,6 +23,7 @@ const GasSettings = () => {
       </Flex>
       <Flex flexWrap="wrap">
         <Button
+        className='btncolor'
           mt="4px"
           mr="4px"
           scale="sm"
@@ -33,6 +35,7 @@ const GasSettings = () => {
           {t('Standard (%gasPrice%)', { gasPrice: GAS_PRICE.default })}
         </Button>
         <Button
+        className='btncolor'
           mt="4px"
           mr="4px"
           scale="sm"
@@ -44,6 +47,7 @@ const GasSettings = () => {
           {t('Fast (%gasPrice%)', { gasPrice: GAS_PRICE.fast })}
         </Button>
         <Button
+        className='btncolor'
           mr="4px"
           mt="4px"
           scale="sm"

@@ -1,18 +1,19 @@
-import { useCallback } from 'react'
+import React, { useState, useCallback } from 'react'
 import styled from 'styled-components'
 import { AutoRenewIcon, Button, Card, CardBody, Flex, Skeleton, Text, ArrowForwardIcon } from '@pancakeswap/uikit'
-import { NextLinkFromReactRouter } from 'components/NextLink'
+import { Link } from 'react-router-dom'
 import BigNumber from 'bignumber.js'
 import { useTranslation } from 'contexts/Localization'
 import { usePriceCakeBusd } from 'state/farms/hooks'
 import useToast from 'hooks/useToast'
 import { useMasterchef } from 'hooks/useContract'
-import useCatchTxError from 'hooks/useCatchTxError'
 import { harvestFarm } from 'utils/calls'
 import Balance from 'components/Balance'
 import { ToastDescriptionWithTx } from 'components/Toast'
+import { logError } from 'utils/sentry'
 import useFarmsWithBalance from 'views/Home/hooks/useFarmsWithBalance'
 import { getEarningsText } from './EarningsText'
+import "../../../../components/ConnectWalletButton.css"
 
 const StyledCard = styled(Card)`
   width: 100%;
@@ -20,9 +21,9 @@ const StyledCard = styled(Card)`
 `
 
 const HarvestCard = () => {
+  const [pendingTx, setPendingTx] = useState(false)
   const { t } = useTranslation()
-  const { toastSuccess } = useToast()
-  const { fetchWithCatchTxError, loading: pendingTx } = useCatchTxError()
+  const { toastSuccess, toastError } = useToast()
   const { farmsWithStakedBalance, earningsSum: farmEarningsSum } = useFarmsWithBalance()
 
   const masterChefContract = useMasterchef()
@@ -36,22 +37,37 @@ const HarvestCard = () => {
   const [preText, toCollectText] = earningsText.split(earningsBusd.toString())
 
   const harvestAllFarms = useCallback(async () => {
-    for (let i = 0; i < farmsWithStakedBalance.length; i++) {
-      const farmWithBalance = farmsWithStakedBalance[i]
-      // eslint-disable-next-line no-await-in-loop
-      const receipt = await fetchWithCatchTxError(() => {
-        return harvestFarm(masterChefContract, farmWithBalance.pid)
-      })
-      if (receipt?.status) {
-        toastSuccess(
-          `${t('Harvested')}!`,
-          <ToastDescriptionWithTx txHash={receipt.transactionHash}>
-            {t('Your %symbol% earnings have been sent to your wallet!', { symbol: 'CAKE' })}
-          </ToastDescriptionWithTx>,
-        )
+    setPendingTx(true)
+    // eslint-disable-next-line no-restricted-syntax
+    for (const farmWithBalance of farmsWithStakedBalance) {
+      try {
+        // eslint-disable-next-line no-await-in-loop
+        const tx = await harvestFarm(masterChefContract, farmWithBalance.pid)
+        toastSuccess(`${t('Transaction Submitted')}!`, <ToastDescriptionWithTx txHash={tx.hash} />)
+        // eslint-disable-next-line no-await-in-loop
+        const receipt = await tx.wait()
+        if (receipt.status) {
+          toastSuccess(
+            `${t('Harvested')}!`,
+            <ToastDescriptionWithTx txHash={receipt.transactionHash}>
+              {t('Your %symbol% earnings have been sent to your wallet!', { symbol: 'CAKE' })}
+            </ToastDescriptionWithTx>,
+          )
+        } else {
+          toastError(
+            t('Error'),
+            <ToastDescriptionWithTx txHash={receipt.transactionHash}>
+              {t('Please try again. Confirm the transaction and make sure you are paying enough gas!')}
+            </ToastDescriptionWithTx>,
+          )
+        }
+      } catch (error) {
+        logError(error)
+        toastError(t('Error'), t('Please try again. Confirm the transaction and make sure you are paying enough gas!'))
       }
     }
-  }, [farmsWithStakedBalance, masterChefContract, toastSuccess, t, fetchWithCatchTxError])
+    setPendingTx(false)
+  }, [farmsWithStakedBalance, masterChefContract, toastSuccess, toastError, t])
 
   return (
     <StyledCard>
@@ -75,19 +91,19 @@ const HarvestCard = () => {
             ) : (
               <Skeleton width={96} height={24} my="2px" />
             )}
-            <Text mb={['16px', null, null, '0']} color="textSubtle">
+            <Text mb={['16px', null, null, '0']} >
               {toCollectText}
             </Text>
           </Flex>
           {numTotalToCollect <= 0 ? (
-            <NextLinkFromReactRouter to="farms">
-              <Button width={['100%', null, null, 'auto']} variant="secondary">
-                <Text color="primary" bold>
-                  {t('Start earning')}
+            <Link to="swap">
+              <Button width={['100%', null, null, 'auto']} variant="secondary" className='button_connect'>
+                <Text bold color="#fff !important;">
+                  {t('Start Trading')}
                 </Text>
-                <ArrowForwardIcon ml="4px" color="primary" />
+                <ArrowForwardIcon ml="4px" color='#fff !important;' fontWeight="bold" />
               </Button>
-            </NextLinkFromReactRouter>
+            </Link>
           ) : (
             <Button
               width={['100%', null, null, 'auto']}

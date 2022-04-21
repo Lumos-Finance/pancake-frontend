@@ -1,3 +1,4 @@
+import React from 'react'
 import styled from 'styled-components'
 import useLastTruthy from 'hooks/useLast'
 import { AdvancedSwapDetails, AdvancedSwapDetailsProps } from './AdvancedSwapDetails'
@@ -8,8 +9,8 @@ const AdvancedDetailsFooter = styled.div<{ show: boolean }>`
   padding-bottom: 16px;
   width: 100%;
   max-width: 400px;
-  border-radius: 20px;
-  background-color: ${({ theme }) => theme.colors.invertedContrast};
+  border-radius: 14px;
+  /* background-color:  rgba(255,255,255,0.1); */
 
   transform: ${({ show }) => (show ? 'translateY(0%)' : 'translateY(-100%)')};
   transition: transform 300ms ease-in-out;
@@ -19,8 +20,10 @@ export default function AdvancedSwapDetailsDropdown({ trade, ...rest }: Advanced
   const lastTrade = useLastTruthy(trade)
 
   return (
-    <AdvancedDetailsFooter show={Boolean(trade)}>
+    <div className='glass mt-16'>
+    <AdvancedDetailsFooter show={Boolean(trade)} className='formulario__container mt-0'>
       <AdvancedSwapDetails {...rest} trade={trade ?? lastTrade ?? undefined} />
     </AdvancedDetailsFooter>
-  )
+    </div>
+  ) 
 }

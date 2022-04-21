@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import React, { useState } from 'react'
 import { Button, Text, Flex, Message, Modal, InjectedModalProps, Checkbox } from '@pancakeswap/uikit'
 import { useExpertModeManager } from 'state/user/hooks'
 import { useTranslation } from 'contexts/Localization'
@@ -15,11 +15,16 @@ const ExpertModal: React.FC<ExpertModalProps> = ({ setShowConfirmExpertModal, se
   const { t } = useTranslation()
 
   return (
+    <div className='opacity'>
+      <div className='box-modal'>
+
+    
     <Modal
+    className='glass'
       title={t('Expert Mode')}
       onBack={() => setShowConfirmExpertModal(false)}
       onDismiss={() => setShowConfirmExpertModal(false)}
-      headerBackground="gradients.cardHeader"
+     
       style={{ maxWidth: '360px' }}
     >
       <Message variant="warning" mb="24px">
@@ -32,17 +37,18 @@ const ExpertModal: React.FC<ExpertModalProps> = ({ setShowConfirmExpertModal, se
       <Text mb="24px">{t('Only use this mode if you know what you’re doing.')}</Text>
       <Flex alignItems="center" mb="24px">
         <Checkbox
+        className='glass'
           name="confirmed"
           type="checkbox"
           checked={isRememberChecked}
           onChange={() => setIsRememberChecked(!isRememberChecked)}
           scale="sm"
         />
-        <Text ml="10px" color="textSubtle" style={{ userSelect: 'none' }}>
+        <Text  ml="10px" color="textSubtle" style={{ userSelect: 'none' }}>
           {t('Don’t show this again')}
         </Text>
       </Flex>
-      <Button
+      <Button className='btncolor'
         mb="8px"
         id="confirm-expert-mode"
         onClick={() => {
@@ -59,6 +65,7 @@ const ExpertModal: React.FC<ExpertModalProps> = ({ setShowConfirmExpertModal, se
         {t('Turn On Expert Mode')}
       </Button>
       <Button
+        className='btncolor3 glass'
         variant="secondary"
         onClick={() => {
           setShowConfirmExpertModal(false)
@@ -67,6 +74,8 @@ const ExpertModal: React.FC<ExpertModalProps> = ({ setShowConfirmExpertModal, se
         {t('Cancel')}
       </Button>
     </Modal>
+    </div>
+    </div>
   )
 }
 

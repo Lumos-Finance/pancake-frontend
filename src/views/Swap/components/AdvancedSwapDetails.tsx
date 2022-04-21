@@ -1,3 +1,4 @@
+import React from 'react'
 import { Trade, TradeType } from '@pancakeswap/sdk'
 import { Text } from '@pancakeswap/uikit'
 import { Field } from 'state/swap/actions'
@@ -17,10 +18,10 @@ function TradeSummary({ trade, allowedSlippage }: { trade: Trade; allowedSlippag
   const slippageAdjustedAmounts = computeSlippageAdjustedAmounts(trade, allowedSlippage)
 
   return (
-    <AutoColumn style={{ padding: '0 16px' }}>
+    <AutoColumn style={{ padding: '0 16px' }} >
       <RowBetween>
         <RowFixed>
-          <Text fontSize="14px" color="textSubtle">
+          <Text fontSize="14px" color="textSubtle" className='white'>
             {isExactIn ? t('Minimum received') : t('Maximum sold')}
           </Text>
           <QuestionHelper
@@ -42,7 +43,7 @@ function TradeSummary({ trade, allowedSlippage }: { trade: Trade; allowedSlippag
       </RowBetween>
       <RowBetween>
         <RowFixed>
-          <Text fontSize="14px" color="textSubtle">
+          <Text fontSize="14px" color="textSubtle" className='white'>
             {t('Price Impact')}
           </Text>
           <QuestionHelper
@@ -56,7 +57,7 @@ function TradeSummary({ trade, allowedSlippage }: { trade: Trade; allowedSlippag
 
       <RowBetween>
         <RowFixed>
-          <Text fontSize="14px" color="textSubtle">
+          <Text fontSize="14px" color="textSubtle" className='white'>
             {t('Liquidity Provider Fee')}
           </Text>
           <QuestionHelper
@@ -65,7 +66,7 @@ function TradeSummary({ trade, allowedSlippage }: { trade: Trade; allowedSlippag
                 <Text mb="12px">{t('For each trade a %amount% fee is paid', { amount: '0.25%' })}</Text>
                 <Text>- {t('%amount% to LP token holders', { amount: '0.17%' })}</Text>
                 <Text>- {t('%amount% to the Treasury', { amount: '0.03%' })}</Text>
-                <Text>- {t('%amount% towards CAKE buyback and burn', { amount: '0.05%' })}</Text>
+                <Text>- {t('%amount% towards TORG buyback and burn', { amount: '0.05%' })}</Text>
               </>
             }
             ml="4px"

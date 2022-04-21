@@ -1,3 +1,4 @@
+import React from 'react'
 import { Text, TextProps } from '@pancakeswap/uikit'
 import { useTranslation } from 'contexts/Localization'
 import { TranslatableText as AchievementDescriptionType } from 'config/constants/types'
@@ -7,7 +8,7 @@ interface AchievementDescriptionProps extends TextProps {
   description?: AchievementDescriptionType
 }
 
-const Description = styled(Text).attrs({ as: 'p' })`
+const Description = styled(Text).attrs({ as: 'p', fontSize: '14px' })`
   display: none;
 
   ${({ theme }) => theme.mediaQueries.md} {
@@ -33,7 +34,7 @@ const AchievementDescription: React.FC<AchievementDescriptionProps> = ({ descrip
   const { key, data = {} } = description
 
   return (
-    <Description color="textSubtle" fontSize="14px" {...props}>
+    <Description color="textSubtle" {...props}>
       {t(key, data)}
     </Description>
   )

@@ -1,22 +1,14 @@
 import BigNumber from 'bignumber.js'
-import { useCallback, useMemo, useState } from 'react'
+import React, { useCallback, useMemo, useState } from 'react'
 import styled from 'styled-components'
-import {
-  Flex,
-  Text,
-  Button,
-  Modal,
-  LinkExternal,
-  CalculateIcon,
-  IconButton,
-  Skeleton,
-  AutoRenewIcon,
-} from '@pancakeswap/uikit'
+import { Flex, Text, Button, Modal, LinkExternal, CalculateIcon, IconButton, Skeleton } from '@pancakeswap/uikit'
 import { ModalActions, ModalInput } from 'components/Modal'
 import RoiCalculatorModal from 'components/RoiCalculatorModal'
 import { useTranslation } from 'contexts/Localization'
 import { getFullDisplayBalance, formatNumber } from 'utils/formatBalance'
+import useToast from 'hooks/useToast'
 import { getInterestBreakdown } from 'utils/compoundApyHelpers'
+import { logError } from 'utils/sentry'
 
 const AnnualRoiContainer = styled(Flex)`
   cursor: pointer;
@@ -54,12 +46,13 @@ const DepositModal: React.FC<DepositModalProps> = ({
   multiplier,
   displayApr,
   lpPrice,
-  lpLabel = '',
+  lpLabel,
   apr,
   addLiquidityUrl,
   cakePrice,
 }) => {
   const [val, setVal] = useState('')
+  const { toastError } = useToast()
   const [pendingTx, setPendingTx] = useState(false)
   const [showRoiCalculator, setShowRoiCalculator] = useState(false)
   const { t } = useTranslation()
@@ -79,8 +72,11 @@ const DepositModal: React.FC<DepositModalProps> = ({
   })
 
   const annualRoi = cakePrice.times(interestBreakdown[3])
-  const annualRoiAsNumber = annualRoi.toNumber()
-  const formattedAnnualRoi = formatNumber(annualRoiAsNumber, annualRoi.gt(10000) ? 0 : 2, annualRoi.gt(10000) ? 0 : 2)
+  const formattedAnnualRoi = formatNumber(
+    annualRoi.toNumber(),
+    annualRoi.gt(10000) ? 0 : 2,
+    annualRoi.gt(10000) ? 0 : 2,
+  )
 
   const handleChange = useCallback(
     (e: React.FormEvent<HTMLInputElement>) => {
@@ -129,7 +125,7 @@ const DepositModal: React.FC<DepositModalProps> = ({
         <Text mr="8px" color="textSubtle">
           {t('Annual ROI at current rates')}:
         </Text>
-        {Number.isFinite(annualRoiAsNumber) ? (
+        {Number.isFinite(annualRoi) ? (
           <AnnualRoiContainer
             alignItems="center"
             onClick={() => {
@@ -149,24 +145,29 @@ const DepositModal: React.FC<DepositModalProps> = ({
         <Button variant="secondary" onClick={onDismiss} width="100%" disabled={pendingTx}>
           {t('Cancel')}
         </Button>
-        {pendingTx ? (
-          <Button width="100%" isLoading={pendingTx} endIcon={<AutoRenewIcon spin color="currentColor" />}>
-            {t('Confirming')}
-          </Button>
-        ) : (
-          <Button
-            width="100%"
-            disabled={!lpTokensToStake.isFinite() || lpTokensToStake.eq(0) || lpTokensToStake.gt(fullBalanceNumber)}
-            onClick={async () => {
-              setPendingTx(true)
+        <Button
+          width="100%"
+          disabled={
+            pendingTx || !lpTokensToStake.isFinite() || lpTokensToStake.eq(0) || lpTokensToStake.gt(fullBalanceNumber)
+          }
+          onClick={async () => {
+            setPendingTx(true)
+            try {
               await onConfirm(val)
-              onDismiss?.()
+              onDismiss()
+            } catch (e) {
+              logError(e)
+              toastError(
+                t('Error'),
+                t('Please try again. Confirm the transaction and make sure you are paying enough gas!'),
+              )
+            } finally {
               setPendingTx(false)
-            }}
-          >
-            {t('Confirm')}
-          </Button>
-        )}
+            }
+          }}
+        >
+          {pendingTx ? t('Confirming') : t('Confirm')}
+        </Button>
       </ModalActions>
       <LinkExternal href={addLiquidityUrl} style={{ alignSelf: 'center' }}>
         {t('Get %symbol%', { symbol: tokenName })}

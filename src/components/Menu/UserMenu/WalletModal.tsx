@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import React, { useState } from 'react'
 import {
   ButtonMenu,
   ButtonMenuItem,
@@ -11,19 +11,17 @@ import {
   ModalHeader as UIKitModalHeader,
   ModalTitle,
 } from '@pancakeswap/uikit'
-import { parseUnits } from '@ethersproject/units'
+import { parseUnits } from 'ethers/lib/utils'
 import { useTranslation } from 'contexts/Localization'
 import styled from 'styled-components'
 import { useGetBnbBalance } from 'hooks/useTokenBalance'
 import { FetchStatus } from 'config/constants/types'
 import WalletInfo from './WalletInfo'
 import WalletTransactions from './WalletTransactions'
-import WalletWrongNetwork from './WalletWrongNetwork'
 
 export enum WalletView {
   WALLET_INFO,
   TRANSACTIONS,
-  WRONG_NETWORK,
 }
 
 interface WalletModalProps extends InjectedModalProps {
@@ -33,7 +31,7 @@ interface WalletModalProps extends InjectedModalProps {
 export const LOW_BNB_BALANCE = parseUnits('2', 'gwei')
 
 const ModalHeader = styled(UIKitModalHeader)`
-  background: ${({ theme }) => theme.colors.gradients.bubblegum};
+  background: transparent;
 `
 
 const Tabs = styled.div`
@@ -52,32 +50,31 @@ const WalletModal: React.FC<WalletModalProps> = ({ initialView = WalletView.WALL
     setView(newIndex)
   }
 
-  const TabsComponent: React.FC = () => (
-    <Tabs>
-      <ButtonMenu scale="sm" variant="subtle" onItemClick={handleClick} activeIndex={view} fullWidth>
-        <ButtonMenuItem>{t('Wallet')}</ButtonMenuItem>
-        <ButtonMenuItem>{t('Transactions')}</ButtonMenuItem>
-      </ButtonMenu>
-    </Tabs>
-  )
-
   return (
-    <ModalContainer title={t('Welcome!')} minWidth="320px">
-      <ModalHeader>
-        <ModalTitle>
-          <Heading>{t('Your Wallet')}</Heading>
-        </ModalTitle>
-        <IconButton variant="text" onClick={onDismiss}>
-          <CloseIcon width="24px" color="text" />
-        </IconButton>
-      </ModalHeader>
-      {view !== WalletView.WRONG_NETWORK && <TabsComponent />}
-      <ModalBody p="24px" maxWidth="400px" width="100%">
-        {view === WalletView.WALLET_INFO && <WalletInfo hasLowBnbBalance={hasLowBnbBalance} onDismiss={onDismiss} />}
-        {view === WalletView.TRANSACTIONS && <WalletTransactions />}
-        {view === WalletView.WRONG_NETWORK && <WalletWrongNetwork onDismiss={onDismiss} />}
-      </ModalBody>
-    </ModalContainer>
+    <div className='opacity'>
+    <div className='box-modal'>
+      <ModalContainer className='glass' title={t('Welcome!')} minWidth="320px">
+        <ModalHeader>
+          <ModalTitle>
+            <Heading>{t('Your Wallet')}</Heading>
+          </ModalTitle>
+          <IconButton variant="text" onClick={onDismiss}>
+            <CloseIcon width="24px" color="text" />
+          </IconButton>
+        </ModalHeader>
+        <Tabs className='margin__b2 glass'>
+          <ButtonMenu scale="sm" variant="subtle" onItemClick={handleClick} activeIndex={view} fullWidth>
+            <ButtonMenuItem >{t('Wallet')}</ButtonMenuItem>
+            <ButtonMenuItem >{t('Transactions')}</ButtonMenuItem>
+          </ButtonMenu>
+        </Tabs>
+        <ModalBody p="24px" maxWidth="400px" width="100%">
+          {view === WalletView.WALLET_INFO && <WalletInfo hasLowBnbBalance={hasLowBnbBalance} onDismiss={onDismiss} />}
+          {view === WalletView.TRANSACTIONS && <WalletTransactions />}
+        </ModalBody>
+      </ModalContainer>
+    </div>
+  </div>
   )
 }
 

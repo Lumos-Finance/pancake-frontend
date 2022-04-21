@@ -1,3 +1,4 @@
+import React from 'react'
 import styled from 'styled-components'
 import { Text, Flex, Box, CloseIcon, IconButton, useMatchBreakpoints } from '@pancakeswap/uikit'
 import { useTranslation } from 'contexts/Localization'
@@ -65,30 +66,33 @@ const PhishingWarningBanner: React.FC = () => {
     </>
   )
   return (
-    <Container className="warning-banner">
-      {isMobile || isMd ? (
-        <>
-          <Box>{warningTextComponent}</Box>
-          <IconButton onClick={hideBanner} variant="text">
-            <CloseIcon color="#FFFFFF" />
-          </IconButton>
-        </>
-      ) : (
-        <>
-          <InnerContainer>
-            <picture>
-              <source type="image/webp" srcSet="/images/decorations/phishing-warning-bunny.webp" />
-              <source type="image/png" srcSet="/images/decorations/phishing-warning-bunny.png" />
-              <img src="/images/decorations/phishing-warning-bunny.png" alt="phishing-warning" width="92px" />
-            </picture>
-            <SpeechBubble>{warningTextComponent}</SpeechBubble>
-          </InnerContainer>
-          <IconButton onClick={hideBanner} variant="text">
-            <CloseIcon color="#FFFFFF" />
-          </IconButton>
-        </>
-      )}
-    </Container>
+    // <Container>
+    //   {isMobile || isMd ? (
+    //     <>
+    //       <Box>{warningTextComponent}</Box>
+    //       <IconButton onClick={hideBanner} variant="text">
+    //         <CloseIcon color="#FFFFFF" />
+    //       </IconButton>
+    //     </>
+    //   ) : (
+    //     <>
+    //       <InnerContainer>
+    //         <picture>
+    //           <source type="image/webp" srcSet="/images/decorations/phishing-warning-bunny.webp" />
+    //           <source type="image/png" srcSet="/images/decorations/phishing-warning-bunny.png" />
+    //           <img src="/images/decorations/phishing-warning-bunny.png" alt="phishing-warning" width="92px" />
+    //         </picture>
+    //         <SpeechBubble>{warningTextComponent}</SpeechBubble>
+    //       </InnerContainer>
+    //       <IconButton onClick={hideBanner} variant="text">
+    //         <CloseIcon color="#FFFFFF" />
+    //       </IconButton>
+    //     </>
+    //   )}
+    // </Container>
+    <>
+
+    </>
   )
 }
 

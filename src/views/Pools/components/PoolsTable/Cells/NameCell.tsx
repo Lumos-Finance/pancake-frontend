@@ -1,14 +1,13 @@
-import { Text, TokenPairImage as UITokenPairImage, useMatchBreakpoints } from '@pancakeswap/uikit'
+import React from 'react'
+import styled from 'styled-components'
 import BigNumber from 'bignumber.js'
-import { TokenPairImage } from 'components/TokenImage'
-import { vaultPoolConfig } from 'config/constants/pools'
+import { Text, useMatchBreakpoints, TokenPairImage as UITokenPairImage } from '@pancakeswap/uikit'
 import { useTranslation } from 'contexts/Localization'
-import { memo } from 'react'
 import { useVaultPoolByKey } from 'state/pools/hooks'
 import { DeserializedPool } from 'state/types'
-import styled from 'styled-components'
 import { BIG_ZERO } from 'utils/bigNumber'
-import { getVaultPosition, VaultPosition, VaultPositionParams } from 'utils/cakePool'
+import { vaultPoolConfig } from 'config/constants/pools'
+import { TokenPairImage } from 'components/TokenImage'
 import BaseCell, { CellContent } from './BaseCell'
 
 interface NameCellProps {
@@ -30,7 +29,7 @@ const NameCell: React.FC<NameCellProps> = ({ pool }) => {
   const { isMobile } = useMatchBreakpoints()
   const { sousId, stakingToken, earningToken, userData, isFinished, vaultKey } = pool
   const {
-    userData: { userShares, lockEndTime, locked },
+    userData: { userShares },
   } = useVaultPoolByKey(pool.vaultKey)
   const hasVaultShares = userShares && userShares.gt(0)
 
@@ -39,16 +38,20 @@ const NameCell: React.FC<NameCellProps> = ({ pool }) => {
 
   const stakedBalance = userData?.stakedBalance ? new BigNumber(userData.stakedBalance) : BIG_ZERO
   const isStaked = stakedBalance.gt(0)
+  const isManualCakePool = sousId === 0
 
   const showStakedTag = vaultKey ? hasVaultShares : isStaked
 
-  let title: React.ReactNode = `${t('Earn')} ${earningTokenSymbol}`
-  let subtitle: React.ReactNode = `${t('Stake')} ${stakingTokenSymbol}`
+  let title = `${t('Earn')} ${earningTokenSymbol}`
+  let subtitle = `${t('Stake')} ${stakingTokenSymbol}`
   const showSubtitle = sousId !== 0 || (sousId === 0 && !isMobile)
 
   if (vaultKey) {
-    title = vaultPoolConfig[vaultKey].name
-    subtitle = vaultPoolConfig[vaultKey].description
+    title = t(vaultPoolConfig[vaultKey].name)
+    subtitle = t(vaultPoolConfig[vaultKey].description)
+  } else if (isManualCakePool) {
+    title = t('Manual CAKE')
+    subtitle = `${t('Earn')} CAKE ${t('Stake').toLocaleLowerCase()} CAKE`
   }
 
   return (
@@ -59,14 +62,11 @@ const NameCell: React.FC<NameCellProps> = ({ pool }) => {
         <TokenPairImage primaryToken={earningToken} secondaryToken={stakingToken} mr="8px" width={40} height={40} />
       )}
       <CellContent>
-        {showStakedTag &&
-          (vaultKey ? (
-            <StakedCakeStatus userShares={userShares} locked={locked} lockEndTime={lockEndTime} />
-          ) : (
-            <Text fontSize="12px" bold color={isFinished ? 'failure' : 'secondary'} textTransform="uppercase">
-              {t('Staked')}
-            </Text>
-          ))}
+        {showStakedTag && (
+          <Text fontSize="12px" bold color={isFinished ? 'failure' : 'secondary'} textTransform="uppercase">
+            {t('Staked')}
+          </Text>
+        )}
         <Text bold={!isMobile} small={isMobile}>
           {title}
         </Text>
@@ -81,21 +81,3 @@ const NameCell: React.FC<NameCellProps> = ({ pool }) => {
 }
 
 export default NameCell
-
-const stakedStatus = {
-  [VaultPosition.None]: { text: '', color: 'secondary' },
-  [VaultPosition.Locked]: { text: 'Locked', color: 'secondary' },
-  [VaultPosition.LockedEnd]: { text: 'Locked End', color: 'secondary' },
-  [VaultPosition.AfterBurning]: { text: 'After Burning', color: 'failure' },
-  [VaultPosition.Flexible]: { text: 'Flexible', color: 'success' },
-}
-
-export const StakedCakeStatus: React.FC<VaultPositionParams> = memo(({ userShares, locked, lockEndTime }) => {
-  const vaultPosition = getVaultPosition({ userShares, locked, lockEndTime })
-  const { t } = useTranslation()
-  return (
-    <Text fontSize="12px" bold color={stakedStatus[vaultPosition].color} textTransform="uppercase">
-      {t(stakedStatus[vaultPosition].text)}
-    </Text>
-  )
-})

@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import React, { useState } from 'react'
 import { escapeRegExp } from 'utils'
 import { Text, Button, Input, Flex, Box } from '@pancakeswap/uikit'
 import { useTranslation } from 'contexts/Localization'
@@ -90,6 +90,7 @@ const SlippageTabs = () => {
         </Flex>
         <Flex flexWrap="wrap">
           <Button
+          className='btncolor'
             mt="4px"
             mr="4px"
             scale="sm"
@@ -102,6 +103,7 @@ const SlippageTabs = () => {
             0.1%
           </Button>
           <Button
+           className='btncolor'
             mt="4px"
             mr="4px"
             scale="sm"
@@ -114,6 +116,7 @@ const SlippageTabs = () => {
             0.5%
           </Button>
           <Button
+           className='btncolor'
             mr="4px"
             mt="4px"
             scale="sm"
@@ -128,6 +131,7 @@ const SlippageTabs = () => {
           <Flex alignItems="center">
             <Box width="76px" mt="4px">
               <Input
+              className='btncolor'
                 scale="sm"
                 inputMode="decimal"
                 pattern="^[0-9]*[.,]?[0-9]{0,2}$"
@@ -172,6 +176,7 @@ const SlippageTabs = () => {
         <Flex>
           <Box width="52px" mt="4px">
             <Input
+            className='border'
               scale="sm"
               inputMode="numeric"
               pattern="^[0-9]+$"

@@ -1,6 +1,6 @@
 /* eslint-disable react-hooks/exhaustive-deps */
-
-import { BigNumber } from '@ethersproject/bignumber'
+import React from 'react'
+import { BigNumber } from 'ethers'
 import { Flex } from '@pancakeswap/uikit'
 import { ContextApi } from 'contexts/Localization/types'
 import { DefaultTheme } from 'styled-components'

@@ -1,9 +1,11 @@
 import BigNumber from 'bignumber.js'
-import { useCallback, useMemo, useState } from 'react'
-import { Button, Modal, AutoRenewIcon } from '@pancakeswap/uikit'
+import React, { useCallback, useMemo, useState } from 'react'
+import { Button, Modal } from '@pancakeswap/uikit'
 import { ModalActions, ModalInput } from 'components/Modal'
 import { useTranslation } from 'contexts/Localization'
 import { getFullDisplayBalance } from 'utils/formatBalance'
+import useToast from 'hooks/useToast'
+import { logError } from 'utils/sentry'
 
 interface WithdrawModalProps {
   max: BigNumber
@@ -14,6 +16,7 @@ interface WithdrawModalProps {
 
 const WithdrawModal: React.FC<WithdrawModalProps> = ({ onConfirm, onDismiss, max, tokenName = '' }) => {
   const [val, setVal] = useState('')
+  const { toastError } = useToast()
   const [pendingTx, setPendingTx] = useState(false)
   const { t } = useTranslation()
   const fullBalance = useMemo(() => {
@@ -50,24 +53,27 @@ const WithdrawModal: React.FC<WithdrawModalProps> = ({ onConfirm, onDismiss, max
         <Button variant="secondary" onClick={onDismiss} width="100%" disabled={pendingTx}>
           {t('Cancel')}
         </Button>
-        {pendingTx ? (
-          <Button width="100%" isLoading={pendingTx} endIcon={<AutoRenewIcon spin color="currentColor" />}>
-            {t('Confirming')}
-          </Button>
-        ) : (
-          <Button
-            width="100%"
-            disabled={!valNumber.isFinite() || valNumber.eq(0) || valNumber.gt(fullBalanceNumber)}
-            onClick={async () => {
-              setPendingTx(true)
+        <Button
+          disabled={pendingTx || !valNumber.isFinite() || valNumber.eq(0) || valNumber.gt(fullBalanceNumber)}
+          onClick={async () => {
+            setPendingTx(true)
+            try {
               await onConfirm(val)
-              onDismiss?.()
+              onDismiss()
+            } catch (e) {
+              logError(e)
+              toastError(
+                t('Error'),
+                t('Please try again. Confirm the transaction and make sure you are paying enough gas!'),
+              )
+            } finally {
               setPendingTx(false)
-            }}
-          >
-            {t('Confirm')}
-          </Button>
-        )}
+            }
+          }}
+          width="100%"
+        >
+          {pendingTx ? t('Confirming') : t('Confirm')}
+        </Button>
       </ModalActions>
     </Modal>
   )

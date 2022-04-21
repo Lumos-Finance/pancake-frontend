@@ -1,7 +1,8 @@
+import React, { useState } from 'react'
 import { AutoRenewIcon, Button, Flex, InjectedModalProps, Text } from '@pancakeswap/uikit'
 import { useTranslation } from 'contexts/Localization'
 import { useCake } from 'hooks/useContract'
-import useCatchTxError from 'hooks/useCatchTxError'
+import useToast from 'hooks/useToast'
 import { useProfile } from 'state/profile/hooks'
 import { getPancakeProfileAddress } from 'utils/addressHelpers'
 import { formatBigNumber } from 'utils/formatBalance'
@@ -13,27 +14,30 @@ interface ApproveCakePageProps extends InjectedModalProps {
 }
 
 const ApproveCakePage: React.FC<ApproveCakePageProps> = ({ goToChange, onDismiss }) => {
+  const [isApproving, setIsApproving] = useState(false)
   const { profile } = useProfile()
   const { t } = useTranslation()
-  const { fetchWithCatchTxError, loading: isApproving } = useCatchTxError()
   const {
     costs: { numberCakeToUpdate, numberCakeToReactivate },
   } = useGetProfileCosts()
-  const { signer: cakeContract } = useCake()
-
-  if (!profile) {
-    return null
-  }
-
+  const cakeContract = useCake()
+  const { toastError } = useToast()
   const cost = profile.isActive ? numberCakeToUpdate : numberCakeToReactivate
 
   const handleApprove = async () => {
-    const receipt = await fetchWithCatchTxError(() => {
-      return cakeContract.approve(getPancakeProfileAddress(), cost.mul(2).toString())
-    })
-    if (receipt?.status) {
+    const tx = await cakeContract.approve(getPancakeProfileAddress(), cost.mul(2).toString())
+    setIsApproving(true)
+    const receipt = await tx.wait()
+    if (receipt.status) {
       goToChange()
+    } else {
+      toastError(t('Error'), t('Please try again. Confirm the transaction and make sure you are paying enough gas!'))
+      setIsApproving(false)
     }
+  }
+
+  if (!profile) {
+    return null
   }
 
   return (

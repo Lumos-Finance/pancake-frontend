@@ -1,9 +1,8 @@
-import { useCallback, useEffect, useState } from 'react'
+import React, { useCallback, useEffect, useState } from 'react'
 import { Currency, ETHER, JSBI, TokenAmount } from '@pancakeswap/sdk'
 import { Button, ChevronDownIcon, Text, AddIcon, useModal } from '@pancakeswap/uikit'
 import styled from 'styled-components'
 import { useTranslation } from 'contexts/Localization'
-import { NextLinkFromReactRouter } from 'components/NextLink'
 import { LightCard } from '../../components/Card'
 import { AutoColumn, ColumnCenter } from '../../components/Layout/Column'
 import { CurrencyLogo } from '../../components/Logo'
@@ -14,10 +13,14 @@ import { PairState, usePair } from '../../hooks/usePairs'
 import useActiveWeb3React from '../../hooks/useActiveWeb3React'
 import { usePairAdder } from '../../state/user/hooks'
 import { useTokenBalance } from '../../state/wallet/hooks'
+import StyledInternalLink from '../../components/Links'
 import { currencyId } from '../../utils/currencyId'
 import Dots from '../../components/Loader/Dots'
 import { AppHeader, AppBody } from '../../components/App'
 import Page from '../Page'
+import Navegation from '../../components/Navegation'
+import ViewBalance from '../Swap/components/Balance'
+
 
 enum Fields {
   TOKEN0 = 0,
@@ -25,7 +28,7 @@ enum Fields {
 }
 
 const StyledButton = styled(Button)`
-  background-color: ${({ theme }) => theme.colors.input};
+  background-color: #ddd9e600;
   color: ${({ theme }) => theme.colors.text};
   box-shadow: none;
   border-radius: 16px;
@@ -90,11 +93,19 @@ export default function PoolFinder() {
   )
 
   return (
-    <Page>
-      <AppBody>
-        <AppHeader title={t('Import Pool')} subtitle={t('Import an existing pool')} backTo="/liquidity" />
+    <div className='main'>
+      <div className='grid'>
+      <ViewBalance /> 
+    <Page className="transparent">
+    <Navegation />
+        <div className="glass">
+          <div className='formulario__container pp'>
+        <div className="clear-fix">
+        <AppHeader title={t('Import Pool')} subtitle={t('Import an existing pool')} backTo="/pool"/>
+        </div>
         <AutoColumn style={{ padding: '1rem' }} gap="md">
           <StyledButton
+            className="poolbtn"
             endIcon={<ChevronDownIcon />}
             onClick={() => {
               onPresentCurrencyModal()
@@ -107,7 +118,7 @@ export default function PoolFinder() {
                 <Text ml="8px">{currency0.symbol}</Text>
               </Row>
             ) : (
-              <Text ml="8px">{t('Select a Token')}</Text>
+              <Text ml="8px">{t('Select a Token ')}</Text>
             )}
           </StyledButton>
 
@@ -116,6 +127,7 @@ export default function PoolFinder() {
           </ColumnCenter>
 
           <StyledButton
+            className="poolbtn"
             endIcon={<ChevronDownIcon />}
             onClick={() => {
               onPresentCurrencyModal()
@@ -128,30 +140,32 @@ export default function PoolFinder() {
                 <Text ml="8px">{currency1.symbol}</Text>
               </Row>
             ) : (
-              <Text as={Row}>{t('Select a Token')}</Text>
+              <Text as={Row}>{t('Select a Token ')}</Text>
             )}
           </StyledButton>
+
+          {hasPosition && (
+            <ColumnCenter
+              style={{ justifyItems: 'center', backgroundColor: '', padding: '12px 0px', borderRadius: '12px' }}
+            >
+              <Text textAlign="center">{t('Pool Found!')}</Text>
+              <StyledInternalLink to="/pool">
+                <Text textAlign="center">{t('Manage this pool.')}</Text>
+              </StyledInternalLink>
+            </ColumnCenter>
+          )}
 
           {currency0 && currency1 ? (
             pairState === PairState.EXISTS ? (
               hasPosition && pair ? (
-                <>
-                  <MinimalPositionCard pair={pair} />
-                  <Button as={NextLinkFromReactRouter} to="/pool" variant="secondary" width="100%">
-                    {t('Manage this pool')}
-                  </Button>
-                </>
+                <MinimalPositionCard pair={pair} />
               ) : (
                 <LightCard padding="45px 10px">
                   <AutoColumn gap="sm" justify="center">
                     <Text textAlign="center">{t('You don’t have liquidity in this pool yet.')}</Text>
-                    <Button
-                      as={NextLinkFromReactRouter}
-                      to={`/add/${currencyId(currency0)}/${currencyId(currency1)}`}
-                      variant="secondary"
-                    >
-                      {t('Add Liquidity')}
-                    </Button>
+                    <StyledInternalLink to={`/add/${currencyId(currency0)}/${currencyId(currency1)}`}>
+                      <Text textAlign="center">{t('Add Liquidity')}</Text>
+                    </StyledInternalLink>
                   </AutoColumn>
                 </LightCard>
               )
@@ -159,13 +173,9 @@ export default function PoolFinder() {
               <LightCard padding="45px 10px">
                 <AutoColumn gap="sm" justify="center">
                   <Text textAlign="center">{t('No pool found.')}</Text>
-                  <Button
-                    as={NextLinkFromReactRouter}
-                    to={`/add/${currencyId(currency0)}/${currencyId(currency1)}`}
-                    variant="secondary"
-                  >
-                    {t('Create pool')}
-                  </Button>
+                  <StyledInternalLink to={`/add/${currencyId(currency0)}/${currencyId(currency1)}`}>
+                    {t('Create pool.')}
+                  </StyledInternalLink>
                 </AutoColumn>
               </LightCard>
             ) : pairState === PairState.INVALID ? (
@@ -198,7 +208,10 @@ export default function PoolFinder() {
           showCommonBases
           selectedCurrency={(activeField === Fields.TOKEN0 ? currency1 : currency0) ?? undefined}
         /> */}
-      </AppBody>
+        </div>
+        </div>
     </Page>
+    </div>
+    </div>
   )
 }

@@ -1,14 +1,18 @@
-import { Card, Heading, Text } from '@pancakeswap/uikit'
+import React, { useMemo, useEffect } from 'react'
+import { Text, Heading, Card } from '@pancakeswap/uikit'
 import Page from 'components/Layout/Page'
-import { useTranslation } from 'contexts/Localization'
-import { useMemo } from 'react'
+import TokenTable from 'views/Info/components/InfoTables/TokensTable'
 import { useAllTokenData, useTokenDatas } from 'state/info/hooks'
 import { useWatchlistTokens } from 'state/user/hooks'
-import TokenTable from 'views/Info/components/InfoTables/TokensTable'
+import { useTranslation } from 'contexts/Localization'
 import TopTokenMovers from 'views/Info/components/TopTokenMovers'
+import "./styles.css"
 
 const TokensOverview: React.FC = () => {
   const { t } = useTranslation()
+  useEffect(() => {
+    window.scrollTo(0, 0)
+  }, [])
 
   const allTokens = useAllTokenData()
 
@@ -23,22 +27,24 @@ const TokensOverview: React.FC = () => {
 
   return (
     <Page>
-      <Heading scale="lg" mb="16px">
+      <Heading className='title' scale="lg" mb="16px">
         {t('Your Watchlist')}
       </Heading>
       {savedTokens.length > 0 ? (
         <TokenTable tokenDatas={watchListTokens} />
       ) : (
-        <Card>
-          <Text py="16px" px="24px">
+        <div className='glass'>
+          <Text className="text" py="16px" px="24px">
             {t('Saved tokens will appear here')}
           </Text>
-        </Card>
+        </div>
       )}
       <TopTokenMovers />
-      <Heading scale="lg" mt="40px" mb="16px" id="info-tokens-title">
+      <div className='margin'>
+      <Heading className='text2' scale="lg" mt="60px" mb="16px" id="info-tokens-title">
         {t('All Tokens')}
       </Heading>
+      </div>
       <TokenTable tokenDatas={formattedTokens} />
     </Page>
   )

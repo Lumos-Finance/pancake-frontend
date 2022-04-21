@@ -1,4 +1,3 @@
-import { memo } from 'react'
 import styled from 'styled-components'
 
 const Container = styled.div`
@@ -8,4 +7,4 @@ const Container = styled.div`
   position: relative;
 `
 
-export default memo(Container)
+export default Container

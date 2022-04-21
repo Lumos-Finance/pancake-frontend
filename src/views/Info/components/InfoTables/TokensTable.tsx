@@ -1,14 +1,14 @@
-import { useState, useMemo, useCallback, useEffect, Fragment } from 'react'
+import React, { useState, useMemo, useCallback, useEffect } from 'react'
 import styled from 'styled-components'
 import { Text, Flex, Box, Skeleton, useMatchBreakpoints, ArrowBackIcon, ArrowForwardIcon } from '@pancakeswap/uikit'
 import { TokenData } from 'state/info/types'
-import { NextLinkFromReactRouter } from 'components/NextLink'
+import { Link } from 'react-router-dom'
 import { CurrencyLogo } from 'views/Info/components/CurrencyLogo'
-import { formatAmount } from 'utils/formatInfoNumbers'
+import { formatAmount } from 'views/Info/utils/formatInfoNumbers'
 import Percent from 'views/Info/components/Percent'
 import { useTranslation } from 'contexts/Localization'
-import orderBy from 'lodash/orderBy'
 import { ClickableColumnHeader, TableWrapper, PageButtons, Arrow, Break } from './shared'
+import './styles.css'
 
 /**
  *  Columns on different layouts
@@ -52,7 +52,7 @@ const ResponsiveGrid = styled.div`
   }
 `
 
-const LinkWrapper = styled(NextLinkFromReactRouter)`
+const LinkWrapper = styled(Link)`
   text-decoration: none;
   :hover {
     cursor: pointer;
@@ -125,7 +125,7 @@ const SORT_FIELD = {
   priceUSDChangeWeek: 'priceUSDChangeWeek',
 }
 
-const MAX_ITEMS = 10
+const MAX_ITEMS = 5
 
 const TokenTable: React.FC<{
   tokenDatas: TokenData[] | undefined
@@ -150,11 +150,16 @@ const TokenTable: React.FC<{
 
   const sortedTokens = useMemo(() => {
     return tokenDatas
-      ? orderBy(
-          tokenDatas,
-          (tokenData) => tokenData[sortField as keyof TokenData],
-          sortDirection ? 'desc' : 'asc',
-        ).slice(maxItems * (page - 1), page * maxItems)
+      ? tokenDatas
+          .sort((a, b) => {
+            if (a && b) {
+              return a[sortField as keyof TokenData] > b[sortField as keyof TokenData]
+                ? (sortDirection ? -1 : 1) * 1
+                : (sortDirection ? -1 : 1) * -1
+            }
+            return -1
+          })
+          .slice(maxItems * (page - 1), page * maxItems)
       : []
   }, [tokenDatas, maxItems, page, sortDirection, sortField])
 
@@ -179,13 +184,13 @@ const TokenTable: React.FC<{
   }
 
   return (
-    <TableWrapper>
+    <TableWrapper id="tokenTable" className='glass'>
       <ResponsiveGrid>
-        <Text color="secondary" fontSize="12px" bold>
+        <Text className="text" color="#21C797" fontSize="12px" bold>
           #
         </Text>
         <ClickableColumnHeader
-          color="secondary"
+          color="#21C797"
           fontSize="12px"
           bold
           onClick={() => handleSort(SORT_FIELD.name)}
@@ -194,7 +199,7 @@ const TokenTable: React.FC<{
           {t('Name')} {arrow(SORT_FIELD.name)}
         </ClickableColumnHeader>
         <ClickableColumnHeader
-          color="secondary"
+          color="#21C797"
           fontSize="12px"
           bold
           onClick={() => handleSort(SORT_FIELD.priceUSD)}
@@ -203,7 +208,7 @@ const TokenTable: React.FC<{
           {t('Price')} {arrow(SORT_FIELD.priceUSD)}
         </ClickableColumnHeader>
         <ClickableColumnHeader
-          color="secondary"
+          color="#21C797"
           fontSize="12px"
           bold
           onClick={() => handleSort(SORT_FIELD.priceUSDChange)}
@@ -212,7 +217,7 @@ const TokenTable: React.FC<{
           {t('Price Change')} {arrow(SORT_FIELD.priceUSDChange)}
         </ClickableColumnHeader>
         <ClickableColumnHeader
-          color="secondary"
+          color="#21C797"
           fontSize="12px"
           bold
           onClick={() => handleSort(SORT_FIELD.volumeUSD)}
@@ -221,7 +226,7 @@ const TokenTable: React.FC<{
           {t('Volume 24H')} {arrow(SORT_FIELD.volumeUSD)}
         </ClickableColumnHeader>
         <ClickableColumnHeader
-          color="secondary"
+          color="#21C797"
           fontSize="12px"
           bold
           onClick={() => handleSort(SORT_FIELD.liquidityUSD)}
@@ -237,10 +242,10 @@ const TokenTable: React.FC<{
           {sortedTokens.map((data, i) => {
             if (data) {
               return (
-                <Fragment key={data.address}>
+                <React.Fragment key={data.address}>
                   <DataRow index={(page - 1) * MAX_ITEMS + i} tokenData={data} />
                   <Break />
-                </Fragment>
+                </React.Fragment>
               )
             }
             return null
@@ -251,7 +256,7 @@ const TokenTable: React.FC<{
                 setPage(page === 1 ? page : page - 1)
               }}
             >
-              <ArrowBackIcon color={page === 1 ? 'textDisabled' : 'primary'} />
+              <ArrowBackIcon color={page === 1 ? 'textDisabled' : '#21C797'} />
             </Arrow>
             <Text>{t('Page %page% of %maxPage%', { page, maxPage })}</Text>
             <Arrow
@@ -259,7 +264,7 @@ const TokenTable: React.FC<{
                 setPage(page === maxPage ? page : page + 1)
               }}
             >
-              <ArrowForwardIcon color={page === maxPage ? 'textDisabled' : 'primary'} />
+              <ArrowForwardIcon color={page === maxPage ? 'textDisabled' : '#21C797'} />
             </Arrow>
           </PageButtons>
         </>

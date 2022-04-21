@@ -1,4 +1,4 @@
-import { useRef } from 'react'
+import React, { useRef } from 'react'
 import styled from 'styled-components'
 import { useTable, Button, ChevronUpIcon, ColumnType } from '@pancakeswap/uikit'
 import { useTranslation } from 'contexts/Localization'
@@ -73,7 +73,7 @@ const FarmTable: React.FC<ITableProps> = (props) => {
 
   return (
     <Container id="farms-table">
-      <TableContainer id="table-container">
+      <TableContainer>
         <TableWrapper ref={tableWrapperEl}>
           <StyledTable>
             <TableBody>

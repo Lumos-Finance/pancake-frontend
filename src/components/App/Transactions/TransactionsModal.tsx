@@ -1,9 +1,9 @@
-import { useCallback } from 'react'
+import React, { useCallback } from 'react'
 import useActiveWeb3React from 'hooks/useActiveWeb3React'
 import { useDispatch } from 'react-redux'
 import { Modal, ModalBody, Text, Button, Flex, InjectedModalProps } from '@pancakeswap/uikit'
 import { useTranslation } from 'contexts/Localization'
-import orderBy from 'lodash/orderBy'
+import { orderBy } from 'lodash'
 import { isTransactionRecent, useAllTransactions } from 'state/transactions/hooks'
 import { TransactionDetails } from 'state/transactions/reducer'
 import { AppDispatch } from 'state'
@@ -43,7 +43,10 @@ const TransactionsModal: React.FC<InjectedModalProps> = ({ onDismiss }) => {
   }, [dispatch, chainId])
 
   return (
-    <Modal title={t('Recent Transactions')} headerBackground="gradients.cardHeader" onDismiss={onDismiss}>
+
+    <div className='opacity'>
+      <div className='box-modal'>
+    <Modal className='glass' title={t('Recent Transactions')}  onDismiss={onDismiss}>
       {account ? (
         <ModalBody>
           {!!pending.length || !!confirmed.length ? (
@@ -65,6 +68,8 @@ const TransactionsModal: React.FC<InjectedModalProps> = ({ onDismiss }) => {
         <ConnectWalletButton />
       )}
     </Modal>
+    </div>
+    </div>
   )
 }
 

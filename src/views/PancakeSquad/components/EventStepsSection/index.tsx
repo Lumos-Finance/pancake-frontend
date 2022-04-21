@@ -1,4 +1,5 @@
-import Link from 'next/link'
+import React from 'react'
+import { Link } from 'react-router-dom'
 import { Box, Button, Card, CardBody, Flex, Step, Stepper, Text } from '@pancakeswap/uikit'
 import { useTranslation } from 'contexts/Localization'
 import { StyledWaveContainer, LandingBodyWrapper } from 'views/PancakeSquad/styles'
@@ -35,9 +36,9 @@ const EventStepsSection: React.FC<EventStepsProps> = ({ eventInfos, userInfos, i
                 {t('Head to the NFT Market to buy!')}
               </Text>
               <Box>
-                <Link href="/nfts" passHref>
-                  <Button as="a">{t('View market')}</Button>
-                </Link>
+                <Button as={Link} to="/nfts">
+                  {t('View market')}
+                </Button>
               </Box>
             </Flex>
           ) : (

@@ -1,5 +1,4 @@
 import BigNumber from 'bignumber.js'
-import lpAprs from 'config/constants/lpAprs.json'
 import { getPoolApr, getFarmApr } from 'utils/apr'
 import { BIG_TEN, BIG_ZERO } from 'utils/bigNumber'
 
@@ -24,17 +23,17 @@ describe('getPoolApr', () => {
 
 describe('getFarmApr', () => {
   it(`returns null when parameters are missing`, () => {
-    const { cakeRewardsApr, lpRewardsApr } = getFarmApr(null, null, null, null, 40)
+    const { cakeRewardsApr, lpRewardsApr } = getFarmApr(null, null, null, null)
     expect(cakeRewardsApr).toBeNull()
     expect(lpRewardsApr).toEqual(0)
   })
   it(`returns null when APR is infinite`, () => {
-    const { cakeRewardsApr, lpRewardsApr } = getFarmApr(BIG_ZERO, BIG_ZERO, BIG_ZERO, '', 40)
+    const { cakeRewardsApr, lpRewardsApr } = getFarmApr(BIG_ZERO, BIG_ZERO, BIG_ZERO, '')
     expect(cakeRewardsApr).toBeNull()
     expect(lpRewardsApr).toEqual(0)
   })
   it(`get the correct pool APR`, () => {
-    const { cakeRewardsApr, lpRewardsApr } = getFarmApr(BIG_TEN, new BigNumber(1), new BigNumber(100000), '', 40)
+    const { cakeRewardsApr, lpRewardsApr } = getFarmApr(BIG_TEN, new BigNumber(1), new BigNumber(100000), '')
     expect(cakeRewardsApr).toEqual(4204800)
     expect(lpRewardsApr).toEqual(0)
   })
@@ -44,9 +43,8 @@ describe('getFarmApr', () => {
       new BigNumber(1),
       new BigNumber(100000),
       '0x0ed7e52944161450477ee417de9cd3a859b14fd0',
-      40,
     )
     expect(cakeRewardsApr).toEqual(4204800)
-    expect(lpRewardsApr).toEqual(lpAprs['0x0ed7e52944161450477ee417de9cd3a859b14fd0'])
+    expect(lpRewardsApr).toEqual(10.5)
   })
 })

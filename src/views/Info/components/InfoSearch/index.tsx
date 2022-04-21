@@ -1,18 +1,17 @@
-import { useRef, useState, useEffect, useMemo } from 'react'
+import React, { useRef, useState, useEffect, useMemo } from 'react'
 import styled from 'styled-components'
 import { Text, Input, Flex, Skeleton, useMatchBreakpoints } from '@pancakeswap/uikit'
 import useFetchSearchResults from 'state/info/queries/search'
 import { CurrencyLogo, DoubleCurrencyLogo } from 'views/Info/components/CurrencyLogo'
-import { formatAmount } from 'utils/formatInfoNumbers'
+import { formatAmount } from 'views/Info/utils/formatInfoNumbers'
 import { useWatchlistTokens, useWatchlistPools } from 'state/user/hooks'
 import SaveIcon from 'views/Info/components/SaveIcon'
+import { useHistory } from 'react-router-dom'
 import { usePoolDatas, useTokenDatas } from 'state/info/hooks'
 import { useTranslation } from 'contexts/Localization'
 import useDebounce from 'hooks/useDebounce'
 import { MINIMUM_SEARCH_CHARACTERS } from 'config/constants/info'
 import { PoolData } from 'state/info/types'
-import { useRouter } from 'next/router'
-import orderBy from 'lodash/orderBy'
 
 const Container = styled.div`
   position: relative;
@@ -140,7 +139,7 @@ const poolIncludesSearchTerm = (pool: PoolData, value: string) => {
 }
 
 const Search = () => {
-  const router = useRouter()
+  const history = useHistory()
   const { isXs, isSm } = useMatchBreakpoints()
   const { t } = useTranslation()
 
@@ -196,7 +195,7 @@ const Search = () => {
     setShowMenu(false)
     setPoolsShown(3)
     setTokensShown(3)
-    router.push(to)
+    history.push(to)
   }
 
   // get date for watchlist
@@ -211,14 +210,14 @@ const Search = () => {
     if (showWatchlist) {
       return watchListTokenData.filter((token) => tokenIncludesSearchTerm(token, value))
     }
-    return orderBy(tokens, (token) => token.volumeUSD, 'desc')
+    return tokens.sort((t0, t1) => (t0.volumeUSD > t1.volumeUSD ? -1 : 1))
   }, [showWatchlist, tokens, watchListTokenData, value])
 
   const poolForList = useMemo(() => {
     if (showWatchlist) {
       return watchListPoolData.filter((pool) => poolIncludesSearchTerm(pool, value))
     }
-    return orderBy(pools, (pool) => pool.volumeUSD, 'desc')
+    return pools.sort((p0, p1) => (p0.volumeUSD > p1.volumeUSD ? -1 : 1))
   }, [pools, showWatchlist, watchListPoolData, value])
 
   const contentUnderTokenList = () => {

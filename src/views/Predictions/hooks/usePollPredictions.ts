@@ -1,26 +1,48 @@
+import { useEffect, useRef } from 'react'
 import { useWeb3React } from '@web3-react/core'
 import { useAppDispatch } from 'state'
-import { useGetPredictionsStatus } from 'state/predictions/hooks'
-import { fetchPredictionData } from 'state/predictions'
+import { useGetCurrentEpoch, useGetEarliestEpoch, useGetPredictionsStatus } from 'state/predictions/hooks'
+import { fetchClaimableStatuses, fetchLedgerData, fetchMarketData, fetchRounds } from 'state/predictions'
 import { PredictionStatus } from 'state/types'
-import useSWR from 'swr'
+import { range } from 'lodash'
 
 const POLL_TIME_IN_SECONDS = 10
 
 const usePollPredictions = () => {
+  const timer = useRef<NodeJS.Timeout>(null)
   const dispatch = useAppDispatch()
   const { account } = useWeb3React()
+  const currentEpoch = useGetCurrentEpoch()
+  const earliestEpoch = useGetEarliestEpoch()
   const status = useGetPredictionsStatus()
 
-  useSWR(
-    status !== PredictionStatus.INITIAL ? ['predictions', account] : null,
-    () => dispatch(fetchPredictionData(account)),
-    {
-      refreshInterval: POLL_TIME_IN_SECONDS * 1000,
-      refreshWhenHidden: true,
-      refreshWhenOffline: true,
-    },
-  )
+  useEffect(() => {
+    // Clear old timer
+    if (timer.current) {
+      clearInterval(timer.current)
+    }
+
+    if (status !== PredictionStatus.INITIAL) {
+      timer.current = setInterval(async () => {
+        const liveCurrentAndRecent = [currentEpoch, currentEpoch - 1, currentEpoch - 2]
+
+        dispatch(fetchRounds(liveCurrentAndRecent))
+        dispatch(fetchMarketData())
+
+        if (account) {
+          const epochRange = range(earliestEpoch, currentEpoch + 1)
+          dispatch(fetchLedgerData({ account, epochs: epochRange }))
+          dispatch(fetchClaimableStatuses({ account, epochs: epochRange }))
+        }
+      }, POLL_TIME_IN_SECONDS * 1000)
+    }
+
+    return () => {
+      if (timer.current) {
+        clearInterval(timer.current)
+      }
+    }
+  }, [timer, account, status, currentEpoch, earliestEpoch, dispatch])
 }
 
 export default usePollPredictions

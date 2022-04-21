@@ -5,7 +5,7 @@ import { FetchStatus } from 'config/constants/types'
 import { useTranslation } from 'contexts/Localization'
 import useAuth from 'hooks/useAuth'
 import useTokenBalance, { useGetBnbBalance } from 'hooks/useTokenBalance'
-
+import React from 'react'
 import { getBscScanLink } from 'utils'
 import { formatBigNumber, getFullDisplayBalance } from 'utils/formatBalance'
 import CopyAddress from './CopyAddress'
@@ -23,12 +23,12 @@ const WalletInfo: React.FC<WalletInfoProps> = ({ hasLowBnbBalance, onDismiss }) 
   const { logout } = useAuth()
 
   const handleLogout = () => {
-    onDismiss?.()
+    onDismiss()
     logout()
   }
 
   return (
-    <>
+    <div className='pp'>
       <Text color="secondary" fontSize="12px" textTransform="uppercase" fontWeight="bold" mb="8px">
         {t('Your Address')}
       </Text>
@@ -60,10 +60,10 @@ const WalletInfo: React.FC<WalletInfoProps> = ({ hasLowBnbBalance, onDismiss }) 
       <Flex alignItems="center" justifyContent="end" mb="24px">
         <LinkExternal href={getBscScanLink(account, 'address')}>{t('View on BscScan')}</LinkExternal>
       </Flex>
-      <Button variant="secondary" width="100%" onClick={handleLogout}>
+      <Button className='btncolor'  width="100%" onClick={handleLogout}>
         {t('Disconnect Wallet')}
       </Button>
-    </>
+    </div>
   )
 }
 

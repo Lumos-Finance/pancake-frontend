@@ -1,4 +1,4 @@
-import { useRef, useEffect, useMemo } from 'react'
+import React, { useRef, useEffect } from 'react'
 import styled from 'styled-components'
 import {
   Modal,
@@ -16,22 +16,16 @@ import BigNumber from 'bignumber.js'
 import { useTranslation } from 'contexts/Localization'
 import { getBalanceNumber } from 'utils/formatBalance'
 import useActiveWeb3React from 'hooks/useActiveWeb3React'
-
 import RoiCalculatorFooter from './RoiCalculatorFooter'
 import RoiCard from './RoiCard'
-import useRoiCalculatorReducer, {
-  CalculatorMode,
-  DefaultCompoundStrategy,
-  EditingCurrency,
-} from './useRoiCalculatorReducer'
+import useRoiCalculatorReducer, { CalculatorMode, EditingCurrency } from './useRoiCalculatorReducer'
 import AnimatedArrow from './AnimatedArrow'
 
-export interface RoiCalculatorModalProps {
+interface RoiCalculatorModalProps {
   onDismiss?: () => void
   onBack?: () => void
   earningTokenPrice: number
-  apr?: number
-  apy?: number
+  apr: number
   displayApr?: string
   linkLabel: string
   linkHref: string
@@ -43,14 +37,11 @@ export interface RoiCalculatorModalProps {
   autoCompoundFrequency?: number
   performanceFee?: number
   isFarm?: boolean
-  initialState?: any
   initialValue?: string
-  strategy?: any
-  header?: React.ReactNode
 }
 
 const StyledModal = styled(Modal)`
-  width: 380px;
+  width: 345px;
   & > :nth-child(2) {
     padding: 0;
   }
@@ -80,7 +71,6 @@ const RoiCalculatorModal: React.FC<RoiCalculatorModalProps> = ({
   onBack,
   earningTokenPrice,
   apr,
-  apy,
   displayApr,
   linkLabel,
   linkHref,
@@ -89,14 +79,10 @@ const RoiCalculatorModal: React.FC<RoiCalculatorModalProps> = ({
   stakingTokenPrice,
   multiplier,
   initialValue,
-  earningTokenSymbol = 'CAKE',
+  earningTokenSymbol = 'LUMOSX',
   autoCompoundFrequency = 0,
   performanceFee = 0,
   isFarm = false,
-  initialState,
-  strategy,
-  header,
-  children,
 }) => {
   const { t } = useTranslation()
   const { account } = useActiveWeb3React()
@@ -112,8 +98,7 @@ const RoiCalculatorModal: React.FC<RoiCalculatorModalProps> = ({
     setCompoundingFrequency,
     setCalculatorMode,
     setTargetRoi,
-    dispatch,
-  } = useRoiCalculatorReducer({ stakingTokenPrice, earningTokenPrice, autoCompoundFrequency }, initialState)
+  } = useRoiCalculatorReducer(stakingTokenPrice, earningTokenPrice, apr, autoCompoundFrequency, performanceFee)
 
   const { compounding, activeCompoundingIndex, stakingDuration, editingCurrency } = state.controls
   const { principalAsUSD, principalAsToken } = state.data
@@ -152,8 +137,6 @@ const RoiCalculatorModal: React.FC<RoiCalculatorModalProps> = ({
   const conversionValue = editingCurrency === EditingCurrency.TOKEN ? principalAsUSD : principalAsToken
   const onUserInput = editingCurrency === EditingCurrency.TOKEN ? setPrincipalFromTokenValue : setPrincipalFromUSDValue
 
-  const DURATION = useMemo(() => [t('1D'), t('7D'), t('30D'), t('1Y'), t('5Y')], [t])
-
   return (
     <StyledModal
       title={t('ROI Calculator')}
@@ -162,27 +145,11 @@ const RoiCalculatorModal: React.FC<RoiCalculatorModalProps> = ({
       headerBackground="gradients.cardHeader"
     >
       <ScrollableContainer>
-        {strategy ? (
-          strategy(state, dispatch)
-        ) : (
-          <DefaultCompoundStrategy
-            apr={apy ?? apr}
-            dispatch={dispatch}
-            state={state}
-            earningTokenPrice={earningTokenPrice}
-            performanceFee={performanceFee}
-            stakingTokenPrice={stakingTokenPrice}
-          />
-        )}
-        {header}
         <Flex flexDirection="column" mb="8px">
           <Text color="secondary" bold fontSize="12px" textTransform="uppercase">
             {t('%asset% staked', { asset: stakingTokenSymbol })}
           </Text>
           <BalanceInput
-            inputProps={{
-              scale: 'sm',
-            }}
             currencyValue={`${conversionValue} ${conversionUnit}`}
             innerRef={balanceInputRef}
             placeholder="0.00"
@@ -212,12 +179,7 @@ const RoiCalculatorModal: React.FC<RoiCalculatorModalProps> = ({
               $1000
             </Button>
             <Button
-              disabled={
-                !Number.isFinite(stakingTokenPrice) ||
-                !stakingTokenBalance.isFinite() ||
-                stakingTokenBalance.lte(0) ||
-                !account
-              }
+              disabled={!stakingTokenBalance.isFinite() || stakingTokenBalance.lte(0) || !account}
               scale="xs"
               p="4px 16px"
               width="128px"
@@ -233,20 +195,16 @@ const RoiCalculatorModal: React.FC<RoiCalculatorModalProps> = ({
             </span>
             {tooltipVisible && tooltip}
           </Flex>
-          {children || (
-            <>
-              <Text mt="24px" color="secondary" bold fontSize="12px" textTransform="uppercase">
-                {t('Staked for')}
-              </Text>
-              <FullWidthButtonMenu activeIndex={stakingDuration} onItemClick={setStakingDuration} scale="sm">
-                {DURATION.map((duration) => (
-                  <ButtonMenuItem key={duration} variant="tertiary">
-                    {duration}
-                  </ButtonMenuItem>
-                ))}
-              </FullWidthButtonMenu>
-            </>
-          )}
+          <Text mt="24px" color="secondary" bold fontSize="12px" textTransform="uppercase">
+            {t('Staked for')}
+          </Text>
+          <FullWidthButtonMenu activeIndex={stakingDuration} onItemClick={setStakingDuration} scale="sm">
+            <ButtonMenuItem variant="tertiary">{t('1D')}</ButtonMenuItem>
+            <ButtonMenuItem variant="tertiary">{t('7D')}</ButtonMenuItem>
+            <ButtonMenuItem variant="tertiary">{t('30D')}</ButtonMenuItem>
+            <ButtonMenuItem variant="tertiary">{t('1Y')}</ButtonMenuItem>
+            <ButtonMenuItem variant="tertiary">{t('5Y')}</ButtonMenuItem>
+          </FullWidthButtonMenu>
           {autoCompoundFrequency === 0 && (
             <>
               <Text mt="24px" color="secondary" bold fontSize="12px" textTransform="uppercase">
@@ -286,7 +244,6 @@ const RoiCalculatorModal: React.FC<RoiCalculatorModalProps> = ({
       <RoiCalculatorFooter
         isFarm={isFarm}
         apr={apr}
-        apy={apy}
         displayApr={displayApr}
         autoCompoundFrequency={autoCompoundFrequency}
         multiplier={multiplier}

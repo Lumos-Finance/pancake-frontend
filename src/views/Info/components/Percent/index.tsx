@@ -1,3 +1,4 @@
+import React from 'react'
 import { Text, TextProps } from '@pancakeswap/uikit'
 
 export interface PercentProps extends TextProps {
@@ -12,7 +13,7 @@ const Percent: React.FC<PercentProps> = ({ value, ...rest }) => {
   const isNegative = value < 0
 
   return (
-    <Text {...rest} color={isNegative ? 'failure' : 'success'}>
+    <Text {...rest} color={isNegative ? '#ff2929' : '#21C797'}>
       {isNegative ? '↓' : '↑'}
       {Math.abs(value).toFixed(2)}%
     </Text>

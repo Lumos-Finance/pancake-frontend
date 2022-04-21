@@ -1,22 +1,25 @@
+import React from 'react'
 import { Heading, Flex, Text, Skeleton, ChartIcon, CommunityIcon, SwapIcon } from '@pancakeswap/uikit'
 import { useTranslation } from 'contexts/Localization'
+import { useGetStats } from 'hooks/api'
 import useTheme from 'hooks/useTheme'
 import { formatLocalisedCompactNumber } from 'utils/formatBalance'
-import useSWRImmutable from 'swr/immutable'
 import IconCard, { IconCardData } from '../IconCard'
 import StatCardContent from './StatCardContent'
 import GradientLogo from '../GradientLogoSvg'
 
+// Values fetched from bitQuery effective 6/9/21
+const txCount = 30841921
+const addressCount = 2751624
+
 const Stats = () => {
   const { t } = useTranslation()
+  const data = useGetStats()
   const { theme } = useTheme()
 
-  const { data: tvl } = useSWRImmutable('tvl')
-  const { data: txCount } = useSWRImmutable('totalTx30Days')
-  const { data: addressCount } = useSWRImmutable('addressCount30Days')
+  const tvlString = data ? formatLocalisedCompactNumber(data.tvl) : '-'
   const trades = formatLocalisedCompactNumber(txCount)
   const users = formatLocalisedCompactNumber(addressCount)
-  const tvlString = tvl ? formatLocalisedCompactNumber(tvl) : '-'
 
   const tvlText = t('And those users are now entrusting the platform with over $%tvl% in funds.', { tvl: tvlString })
   const [entrusting, inFunds] = tvlText.split(tvlString)
@@ -48,7 +51,7 @@ const Stats = () => {
       <Flex flexWrap="wrap">
         <Text display="inline" textAlign="center" color="textSubtle" mb="20px">
           {entrusting}
-          <>{tvl ? <>{tvlString}</> : <Skeleton display="inline-block" height={16} width={70} mt="2px" />}</>
+          <>{data ? <>{tvlString}</> : <Skeleton display="inline-block" height={16} width={70} mt="2px" />}</>
           {inFunds}
         </Text>
       </Flex>

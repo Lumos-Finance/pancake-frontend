@@ -1,3 +1,4 @@
+import React from 'react'
 import { HelpIcon, useTooltip, Box, BoxProps, Placement } from '@pancakeswap/uikit'
 import styled from 'styled-components'
 

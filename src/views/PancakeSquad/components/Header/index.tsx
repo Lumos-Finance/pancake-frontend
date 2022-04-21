@@ -1,4 +1,5 @@
-import Link from 'next/link'
+import React from 'react'
+import { Link } from 'react-router-dom'
 import { Box, Flex, lightColors, Spinner, Text, Timeline } from '@pancakeswap/uikit'
 import { useTranslation } from 'contexts/Localization'
 import { useGetCakeBalance } from 'hooks/useTokenBalance'
@@ -62,8 +63,8 @@ const PancakeSquadHeader: React.FC<PancakeSquadHeaderType> = ({
       alignItems="center"
     >
       <Flex width="100%">
-        <Link href="/nfts" passHref>
-          <Text as="a" color="primary" bold>{`< ${t('NFT Market')}`}</Text>
+        <Link to="/nfts">
+          <Text color="primary" bold>{`< ${t('NFT Market')}`}</Text>
         </Link>
       </Flex>
       <StyledSquadTitle my="32px" color={lightColors.invertedContrast} bold textAlign="center">
@@ -150,7 +151,12 @@ const PancakeSquadHeader: React.FC<PancakeSquadHeaderType> = ({
                     )}
                   </>
                 )}
-                {isLoading && (userStatus === UserStatusEnum.UNCONNECTED ? <ConnectWalletButton /> : <Spinner />)}
+                {isLoading &&
+                  (userStatus === UserStatusEnum.UNCONNECTED ? (
+                    <ConnectWalletButton userStatus={userStatus} />
+                  ) : (
+                    <Spinner />
+                  ))}
               </Flex>
             </Flex>
           </StyledSquadEventContainer>

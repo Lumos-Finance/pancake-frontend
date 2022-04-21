@@ -1,17 +1,13 @@
-import { useMemo, useState } from 'react'
+import React, { useMemo, useState } from 'react'
 import { Text, Box, Card, Flex, Skeleton } from '@pancakeswap/uikit'
 import LineChart from 'views/Info/components/InfoCharts/LineChart'
 import BarChart from 'views/Info/components/InfoCharts/BarChart'
+import CandleChart from 'views/Info/components/InfoCharts/CandleChart'
 import { TabToggleGroup, TabToggle } from 'components/TabToggle'
 import { useTranslation } from 'contexts/Localization'
-import { formatAmount } from 'utils/formatInfoNumbers'
+import { formatAmount } from 'views/Info/utils/formatInfoNumbers'
 import { ChartEntry, TokenData, PriceChartEntry } from 'state/info/types'
 import { fromUnixTime } from 'date-fns'
-import dynamic from 'next/dynamic'
-
-const CandleChart = dynamic(() => import('views/Info/components/InfoCharts/CandleChart'), {
-  ssr: false,
-})
 
 enum ChartView {
   LIQUIDITY,
@@ -82,9 +78,9 @@ const ChartCard: React.FC<ChartCardProps> = ({ variant, chartData, tokenData, to
   }
 
   return (
-    <Card>
-      <TabToggleGroup>
-        <TabToggle isActive={view === ChartView.VOLUME} onClick={() => setView(ChartView.VOLUME)}>
+    <div className="glass">
+      <TabToggleGroup >
+        <TabToggle className="buttonsL" isActive={view === ChartView.VOLUME} onClick={() => setView(ChartView.VOLUME)}>
           <Text>{t('Volume')}</Text>
         </TabToggle>
         <TabToggle isActive={view === ChartView.LIQUIDITY} onClick={() => setView(ChartView.LIQUIDITY)}>
@@ -99,12 +95,12 @@ const ChartCard: React.FC<ChartCardProps> = ({ variant, chartData, tokenData, to
 
       <Flex flexDirection="column" px="24px" pt="24px">
         {getLatestValueDisplay()}
-        <Text small color="secondary">
+        <Text small color="#565c5b">
           {hoverDate || currentDate}
         </Text>
       </Flex>
 
-      <Box px="24px" height={variant === 'token' ? '250px' : '335px'}>
+      <Box px="24px" className='transparent' height={variant === 'token' ? '250px' : '335px'}>
         {view === ChartView.LIQUIDITY ? (
           <LineChart data={formattedTvlData} setHoverValue={setHoverValue} setHoverDate={setHoverDate} />
         ) : view === ChartView.VOLUME ? (
@@ -113,7 +109,7 @@ const ChartCard: React.FC<ChartCardProps> = ({ variant, chartData, tokenData, to
           <CandleChart data={tokenPriceData} setValue={setHoverValue} setLabel={setHoverDate} />
         ) : null}
       </Box>
-    </Card>
+    </div>
   )
 }
 

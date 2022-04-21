@@ -1,4 +1,4 @@
-import { ReactText } from 'react'
+import React, { ReactText } from 'react'
 import {
   Text,
   Heading,
@@ -136,7 +136,7 @@ const CardUserInfo: React.FC<YourScoreProps> = ({
     if (!hasRegistered) {
       return t('You’re not participating this time.')
     }
-    return profile ? `@${profile.username}` : ''
+    return `@${profile.username}`
   }
 
   const getSubHeadingText = () => {
@@ -146,7 +146,7 @@ const CardUserInfo: React.FC<YourScoreProps> = ({
     if (!hasRegistered) {
       return t('Sorry, you needed to register during the “entry” period!')
     }
-    return profile && profile.team ? `${profile.team.name}` : ''
+    return `${profile.team.name}`
   }
 
   const headingText = getHeadingText()
@@ -164,7 +164,7 @@ const CardUserInfo: React.FC<YourScoreProps> = ({
       </Text>
       {shouldShowUserRanks && (
         <>
-          {profile?.nft && volume > 0 && (
+          {profile.nft && volume > 0 && (
             <Button mt="12px" variant="secondary" scale="sm" onClick={onPresentShareModal}>
               {t('Share Score')}
             </Button>

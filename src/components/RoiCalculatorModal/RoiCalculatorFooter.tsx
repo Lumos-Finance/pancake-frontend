@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import React, { useState } from 'react'
 import styled from 'styled-components'
 import { Flex, Box, Text, ExpandableLabel, LinkExternal, Grid, HelpIcon, useTooltip } from '@pancakeswap/uikit'
 import { useTranslation } from 'contexts/Localization'
@@ -29,8 +29,7 @@ const BulletList = styled.ul`
 
 interface RoiCalculatorFooterProps {
   isFarm: boolean
-  apr?: number
-  apy?: number
+  apr: number
   displayApr: string
   autoCompoundFrequency: number
   multiplier: string
@@ -42,7 +41,6 @@ interface RoiCalculatorFooterProps {
 const RoiCalculatorFooter: React.FC<RoiCalculatorFooterProps> = ({
   isFarm,
   apr,
-  apy,
   displayApr,
   autoCompoundFrequency,
   multiplier,
@@ -72,6 +70,7 @@ const RoiCalculatorFooter: React.FC<RoiCalculatorFooterProps> = ({
   )
 
   const gridRowCount = isFarm ? 4 : 2
+  const apy = (getApy(apr, autoCompoundFrequency > 0 ? autoCompoundFrequency : 1, 365, performanceFee) * 100).toFixed(2)
 
   return (
     <Footer p="16px" flexDirection="column">
@@ -91,33 +90,20 @@ const RoiCalculatorFooter: React.FC<RoiCalculatorFooterProps> = ({
                 </Text>
               </>
             )}
-            {!Number.isFinite(apy) ? (
-              <Text color="textSubtle" small>
-                {isFarm ? t('Base APR (CAKE yield only)') : t('APR')}
-              </Text>
-            ) : (
-              <Text color="textSubtle" small>
-                {t('APY')}
-              </Text>
-            )}
-            <Text small textAlign="right">
-              {(apy ?? apr).toFixed(2)}%
+            <Text color="textSubtle" small>
+              {isFarm ? t('Base APR (CAKE yield only)') : t('APR')}
             </Text>
-            {!Number.isFinite(apy) && (
-              <Text color="textSubtle" small>
-                {t('APY (%compoundTimes%x daily compound)', {
-                  compoundTimes: autoCompoundFrequency > 0 ? autoCompoundFrequency : 1,
-                })}
-              </Text>
-            )}
-            {!Number.isFinite(apy) && (
-              <Text small textAlign="right">
-                {(
-                  getApy(apr, autoCompoundFrequency > 0 ? autoCompoundFrequency : 1, 365, performanceFee) * 100
-                ).toFixed(2)}
-                %
-              </Text>
-            )}
+            <Text small textAlign="right">
+              {apr.toFixed(2)}%
+            </Text>
+            <Text color="textSubtle" small>
+              {t('APY (%compoundTimes%x daily compound)', {
+                compoundTimes: autoCompoundFrequency > 0 ? autoCompoundFrequency : 1,
+              })}
+            </Text>
+            <Text small textAlign="right">
+              {apy}%
+            </Text>
             {isFarm && (
               <>
                 <Text color="textSubtle" small>
@@ -137,7 +123,7 @@ const RoiCalculatorFooter: React.FC<RoiCalculatorFooterProps> = ({
           </Grid>
           <BulletList>
             <li>
-              <Text fontSize="12px" textAlign="center" color="textSubtle" display="inline" lineHeight={1.1}>
+              <Text fontSize="12px" textAlign="center" color="textSubtle" display="inline">
                 {t('Calculated based on current rates.')}
               </Text>
             </li>
@@ -149,7 +135,7 @@ const RoiCalculatorFooter: React.FC<RoiCalculatorFooterProps> = ({
               </li>
             )}
             <li>
-              <Text fontSize="12px" textAlign="center" color="textSubtle" display="inline" lineHeight={1.1}>
+              <Text fontSize="12px" textAlign="center" color="textSubtle" display="inline">
                 {t(
                   'All figures are estimates provided for your convenience only, and by no means represent guaranteed returns.',
                 )}

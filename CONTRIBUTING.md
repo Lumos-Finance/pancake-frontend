@@ -9,7 +9,7 @@ Install the dependencies
 
 ```shell
 yarn
-yarn dev
+yarn start
 ```
 
 Don't forget to setup your IDE with `eslint` and `prettier`.
@@ -23,7 +23,6 @@ Don't forget to setup your IDE with `eslint` and `prettier`.
 - **context** contains global contexts (separated from the redux store)
 - **hooks** contains generic hooks.
 - **utils** contains generic utilities functions.
-- **pages** contains page components for next.js
 
 ## Tests
 

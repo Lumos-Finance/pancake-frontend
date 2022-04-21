@@ -1,4 +1,4 @@
-import { memo, useCallback, useMemo, useState, useEffect } from 'react'
+import React, { memo, useCallback, useMemo, useState, useEffect } from 'react'
 import { Button, Text, CheckmarkIcon, CogIcon, Input, Toggle, LinkExternal, useTooltip } from '@pancakeswap/uikit'
 import { useDispatch, useSelector } from 'react-redux'
 import styled from 'styled-components'
@@ -186,12 +186,6 @@ function ManageLists({
         }
 
         if (l1 && l2) {
-          // Always make PancakeSwap list in top.
-          const keyword = 'pancakeswap'
-          if (l1.name.toLowerCase().includes(keyword) || l2.name.toLowerCase().includes(keyword)) {
-            return -1
-          }
-
           return l1.name.toLowerCase() < l2.name.toLowerCase()
             ? -1
             : l1.name.toLowerCase() === l2.name.toLowerCase()

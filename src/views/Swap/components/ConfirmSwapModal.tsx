@@ -1,4 +1,4 @@
-import { useCallback, useMemo } from 'react'
+import React, { useCallback, useMemo } from 'react'
 import { currencyEquals, Trade } from '@pancakeswap/sdk'
 import { InjectedModalProps } from '@pancakeswap/uikit'
 import { useTranslation } from 'contexts/Localization'
@@ -8,6 +8,7 @@ import TransactionConfirmationModal, {
 } from 'components/TransactionConfirmationModal'
 import SwapModalFooter from './SwapModalFooter'
 import SwapModalHeader from './SwapModalHeader'
+import "./styles.css"
 
 /**
  * Returns true if the trade requires a confirmation of details before we can submit it
@@ -99,6 +100,8 @@ const ConfirmSwapModal: React.FC<InjectedModalProps & ConfirmSwapModalProps> = (
   )
 
   return (
+    <div className='opacity'>
+      <div className='box-modal'>
     <TransactionConfirmationModal
       title={t('Confirm Swap')}
       onDismiss={onDismiss}
@@ -109,6 +112,8 @@ const ConfirmSwapModal: React.FC<InjectedModalProps & ConfirmSwapModalProps> = (
       pendingText={pendingText}
       currencyToAdd={trade?.outputAmount.currency}
     />
+      </div>
+    </div>
   )
 }
 

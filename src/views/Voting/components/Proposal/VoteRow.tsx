@@ -1,3 +1,4 @@
+import React from 'react'
 import { Flex, LinkExternal, Text, Tag, CheckmarkCircleIcon } from '@pancakeswap/uikit'
 import truncateHash from 'utils/truncateHash'
 import { getBscScanLink } from 'utils'
@@ -15,7 +16,6 @@ interface VoteRowProps {
 const VoteRow: React.FC<VoteRowProps> = ({ vote, isVoter }) => {
   const { t } = useTranslation()
   const hasVotingPower = !!vote.metadata?.votingPower
-
   const votingPower = hasVotingPower
     ? parseFloat(vote.metadata.votingPower).toLocaleString(undefined, {
         minimumFractionDigits: 0,

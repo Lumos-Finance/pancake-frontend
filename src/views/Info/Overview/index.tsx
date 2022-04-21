@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect } from 'react'
+import React, { useState, useMemo, useEffect } from 'react'
 import styled from 'styled-components'
 import { Flex, Box, Text, Heading, Card, Skeleton } from '@pancakeswap/uikit'
 import { fromUnixTime } from 'date-fns'
@@ -7,8 +7,9 @@ import Page from 'components/Layout/Page'
 import LineChart from 'views/Info/components/InfoCharts/LineChart'
 import TokenTable from 'views/Info/components/InfoTables/TokensTable'
 import PoolTable from 'views/Info/components/InfoTables/PoolsTable'
-import { formatAmount } from 'utils/formatInfoNumbers'
+import { formatAmount } from 'views/Info/utils/formatInfoNumbers'
 import BarChart from 'views/Info/components/InfoCharts/BarChart'
+import './styles.css'
 import {
   useAllPoolData,
   useAllTokenData,
@@ -33,6 +34,13 @@ export const ChartCardsContainer = styled(Flex)`
     flex-direction: row;
   } ;
 `
+// export const Card = styled(Flex)`
+//   justify-content: space-between;
+//   flex-direction: column;
+//   width: 100%;
+//   padding: 0;
+//   gap: 1em;
+// `
 
 const Overview: React.FC = () => {
   const {
@@ -108,12 +116,12 @@ const Overview: React.FC = () => {
   return (
     <Page>
       <Heading scale="lg" mb="16px" id="info-overview-title">
-        {t('PancakeSwap Info & Analytics')}
+        {t('Info & Analytics')}
       </Heading>
-      <ChartCardsContainer>
-        <Card>
-          <Box p={['16px', '16px', '24px']}>
-            <Text bold color="secondary">
+      <ChartCardsContainer id="chartCont" className="border-r">
+        <div className='glass'>
+          <Box className='chart2'>
+            <Text  bold color="#21C797">
               {t('Liquidity')}
             </Text>
             {liquidityHover > 0 ? (
@@ -132,10 +140,10 @@ const Overview: React.FC = () => {
               />
             </Box>
           </Box>
-        </Card>
-        <Card>
-          <Box p={['16px', '16px', '24px']}>
-            <Text bold color="secondary">
+        </div>
+        <div className='glass'>
+          <Box className='chart2'>
+            <Text bold color="#21C797">
               {t('Volume 24H')}
             </Text>
             {volumeHover > 0 ? (
@@ -150,19 +158,26 @@ const Overview: React.FC = () => {
               <BarChart data={formattedVolumeData} setHoverValue={setVolumeHover} setHoverDate={setVolumeDateHover} />
             </Box>
           </Box>
-        </Card>
+        </div>
       </ChartCardsContainer>
-      <Heading scale="lg" mt="40px" mb="16px">
+      <div className='margin'>
+      <Heading scale="lg" mt="70px" mb="16px">
         {t('Top Tokens')}
       </Heading>
+      </div>
       <TokenTable tokenDatas={formattedTokens} />
-      <Heading scale="lg" mt="40px" mb="16px">
+      <div className='margin'>
+      <Heading scale="lg" mt="70px" mb="16px">
         {t('Top Pools')}
       </Heading>
+      </div>
       <PoolTable poolDatas={poolDatas} loading={somePoolsAreLoading} />
-      <Heading scale="lg" mt="40px" mb="16px">
+      <div className='margin'>
+      <Heading scale="lg" mt="70px" mb="16px">
         {t('Transactions')}
       </Heading>
+      </div>
+      
       <TransactionTable transactions={transactions} />
     </Page>
   )

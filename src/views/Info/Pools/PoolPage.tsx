@@ -1,34 +1,35 @@
 /* eslint-disable no-nested-ternary */
+import React, { useEffect, useState } from 'react'
+import { RouteComponentProps, Link } from 'react-router-dom'
 import {
+  Text,
+  Flex,
   Box,
-  Breadcrumbs,
   Button,
+  Card,
+  Breadcrumbs,
+  Heading,
+  Spinner,
+  LinkExternal,
+  useMatchBreakpoints,
   ButtonMenu,
   ButtonMenuItem,
-  Card,
-  Flex,
-  Heading,
   HelpIcon,
-  LinkExternal,
-  Spinner,
-  Text,
-  useMatchBreakpoints,
   useTooltip,
 } from '@pancakeswap/uikit'
-import Page from 'components/Layout/Page'
-import { NextLinkFromReactRouter } from 'components/NextLink'
-import { useTranslation } from 'contexts/Localization'
-import { useState } from 'react'
-import { usePoolChartData, usePoolDatas, usePoolTransactions } from 'state/info/hooks'
-import { useWatchlistPools } from 'state/user/hooks'
 import styled from 'styled-components'
+import Page from 'components/Layout/Page'
 import { getBscScanLink } from 'utils'
 import { CurrencyLogo, DoubleCurrencyLogo } from 'views/Info/components/CurrencyLogo'
-import ChartCard from 'views/Info/components/InfoCharts/ChartCard'
-import TransactionTable from 'views/Info/components/InfoTables/TransactionsTable'
+import { formatAmount } from 'views/Info/utils/formatInfoNumbers'
 import Percent from 'views/Info/components/Percent'
 import SaveIcon from 'views/Info/components/SaveIcon'
-import { formatAmount } from 'utils/formatInfoNumbers'
+import { usePoolDatas, usePoolChartData, usePoolTransactions } from 'state/info/hooks'
+import TransactionTable from 'views/Info/components/InfoTables/TransactionsTable'
+import { useWatchlistPools } from 'state/user/hooks'
+import { useTranslation } from 'contexts/Localization'
+import ChartCard from 'views/Info/components/InfoCharts/ChartCard'
+import "./styles.css"
 
 const ContentLayout = styled.div`
   display: grid;
@@ -61,7 +62,11 @@ const LockedTokensContainer = styled(Flex)`
   max-width: 280px;
 `
 
-const PoolPage: React.FC<{ address: string }> = ({ address: routeAddress }) => {
+const PoolPage: React.FC<RouteComponentProps<{ address: string }>> = ({
+  match: {
+    params: { address: routeAddress },
+  },
+}) => {
   const { isXs, isSm } = useMatchBreakpoints()
   const { t } = useTranslation()
   const [showWeeklyData, setShowWeeklyData] = useState(0)
@@ -69,6 +74,11 @@ const PoolPage: React.FC<{ address: string }> = ({ address: routeAddress }) => {
     t(`Based on last 7 days' performance. Does not account for impermanent loss`),
     {},
   )
+
+  // Needed to scroll up if user comes to this page by clicking on entry in the table
+  useEffect(() => {
+    window.scrollTo(0, 0)
+  }, [])
 
   // In case somebody pastes checksummed address into url (since GraphQL expects lowercase address)
   const address = routeAddress.toLowerCase()
@@ -85,12 +95,12 @@ const PoolPage: React.FC<{ address: string }> = ({ address: routeAddress }) => {
         <>
           <Flex justifyContent="space-between" mb="16px" flexDirection={['column', 'column', 'row']}>
             <Breadcrumbs mb="32px">
-              <NextLinkFromReactRouter to="/info">
-                <Text color="primary">{t('Info')}</Text>
-              </NextLinkFromReactRouter>
-              <NextLinkFromReactRouter to="/info/pools">
-                <Text color="primary">{t('Pools')}</Text>
-              </NextLinkFromReactRouter>
+              <Link to="/info">
+                <Text color="white">{t('Info')}</Text>
+              </Link>
+              <Link to="/info/pools">
+                <Text color="white">{t('Pools')}</Text>
+              </Link>
               <Flex>
                 <Text mr="8px">{`${poolData.token0.symbol} / ${poolData.token1.symbol}`}</Text>
               </Flex>
@@ -106,6 +116,7 @@ const PoolPage: React.FC<{ address: string }> = ({ address: routeAddress }) => {
             <Flex alignItems="center" mb={['8px', null]}>
               <DoubleCurrencyLogo address0={poolData.token0.address} address1={poolData.token1.address} size={32} />
               <Text
+                className='text'
                 ml="38px"
                 bold
                 fontSize={isXs || isSm ? '24px' : '40px'}
@@ -114,8 +125,8 @@ const PoolPage: React.FC<{ address: string }> = ({ address: routeAddress }) => {
             </Flex>
             <Flex justifyContent="space-between" flexDirection={['column', 'column', 'column', 'row']}>
               <Flex flexDirection={['column', 'column', 'row']} mb={['8px', '8px', null]}>
-                <NextLinkFromReactRouter to={`/info/token/${poolData.token0.address}`}>
-                  <TokenButton>
+                <Link to={`/info/token/${poolData.token0.address}`}>
+                  <TokenButton className="amount">
                     <CurrencyLogo address={poolData.token0.address} size="24px" />
                     <Text fontSize="16px" ml="4px" style={{ whiteSpace: 'nowrap' }} width="fit-content">
                       {`1 ${poolData.token0.symbol} =  ${formatAmount(poolData.token1Price, {
@@ -125,8 +136,8 @@ const PoolPage: React.FC<{ address: string }> = ({ address: routeAddress }) => {
                       })} ${poolData.token1.symbol}`}
                     </Text>
                   </TokenButton>
-                </NextLinkFromReactRouter>
-                <NextLinkFromReactRouter to={`/info/token/${poolData.token1.address}`}>
+                </Link>
+                <Link to={`/info/token/${poolData.token1.address}`}>
                   <TokenButton ml={[null, null, '10px']}>
                     <CurrencyLogo address={poolData.token1.address} size="24px" />
                     <Text fontSize="16px" ml="4px" style={{ whiteSpace: 'nowrap' }} width="fit-content">
@@ -137,29 +148,27 @@ const PoolPage: React.FC<{ address: string }> = ({ address: routeAddress }) => {
                       })} ${poolData.token0.symbol}`}
                     </Text>
                   </TokenButton>
-                </NextLinkFromReactRouter>
+                </Link>
               </Flex>
               <Flex>
-                <NextLinkFromReactRouter to={`/add/${poolData.token0.address}/${poolData.token1.address}`}>
-                  <Button mr="8px" variant="secondary">
+                <Link to={`/add/${poolData.token0.address}/${poolData.token1.address}`}>
+                  <Button className="btns" mr="8px" variant="secondary">
                     {t('Add Liquidity')}
                   </Button>
-                </NextLinkFromReactRouter>
-                <NextLinkFromReactRouter
-                  to={`/swap?inputCurrency=${poolData.token0.address}&outputCurrency=${poolData.token1.address}`}
-                >
-                  <Button>{t('Trade')}</Button>
-                </NextLinkFromReactRouter>
+                </Link>
+                <Link to={`/swap?inputCurrency=${poolData.token0.address}&outputCurrency=${poolData.token1.address}`}>
+                  <Button className="btns">{t('Trade')}</Button>
+                </Link>
               </Flex>
             </Flex>
           </Flex>
           <ContentLayout>
             <Box>
-              <Card>
+              <div className='glass2'>
                 <Box p="24px">
                   <Flex justifyContent="space-between">
                     <Flex flex="1" flexDirection="column">
-                      <Text color="secondary" bold fontSize="12px" textTransform="uppercase">
+                      <Text color="white" bold fontSize="12px" textTransform="uppercase">
                         {t('Liquidity')}
                       </Text>
                       <Text fontSize="24px" bold>
@@ -168,7 +177,7 @@ const PoolPage: React.FC<{ address: string }> = ({ address: routeAddress }) => {
                       <Percent value={poolData.liquidityUSDChange} />
                     </Flex>
                     <Flex flex="1" flexDirection="column">
-                      <Text color="secondary" bold fontSize="12px" textTransform="uppercase">
+                      <Text color="white" bold fontSize="12px" textTransform="uppercase">
                         {t('LP reward APR')}
                       </Text>
                       <Text fontSize="24px" bold>
@@ -176,23 +185,23 @@ const PoolPage: React.FC<{ address: string }> = ({ address: routeAddress }) => {
                       </Text>
                       <Flex alignItems="center">
                         <span ref={targetRef}>
-                          <HelpIcon color="textSubtle" />
+                          <HelpIcon color="white" />
                         </span>
-                        <Text ml="4px" fontSize="12px" color="textSubtle">
+                        <Text ml="4px" fontSize="12px" color="white">
                           {t('7D performance')}
                         </Text>
                         {tooltipVisible && tooltip}
                       </Flex>
                     </Flex>
                   </Flex>
-                  <Text color="secondary" bold mt="24px" fontSize="12px" textTransform="uppercase">
+                  <Text color="white" bold mt="24px" fontSize="12px" textTransform="uppercase">
                     {t('Total Tokens Locked')}
                   </Text>
-                  <LockedTokensContainer>
+                  <LockedTokensContainer className="conteiner">
                     <Flex justifyContent="space-between">
                       <Flex>
                         <CurrencyLogo address={poolData.token0.address} size="24px" />
-                        <Text small color="textSubtle" ml="8px">
+                        <Text small color="white" ml="8px">
                           {poolData.token0.symbol}
                         </Text>
                       </Flex>
@@ -201,7 +210,7 @@ const PoolPage: React.FC<{ address: string }> = ({ address: routeAddress }) => {
                     <Flex justifyContent="space-between">
                       <Flex>
                         <CurrencyLogo address={poolData.token1.address} size="24px" />
-                        <Text small color="textSubtle" ml="8px">
+                        <Text small color="white" ml="8px">
                           {poolData.token1.symbol}
                         </Text>
                       </Flex>
@@ -209,21 +218,21 @@ const PoolPage: React.FC<{ address: string }> = ({ address: routeAddress }) => {
                     </Flex>
                   </LockedTokensContainer>
                 </Box>
-              </Card>
-              <Card mt="16px">
+              </div>
+              <div className='glass'>
                 <Flex flexDirection="column" p="24px">
                   <ButtonMenu
                     activeIndex={showWeeklyData}
                     onItemClick={(index) => setShowWeeklyData(index)}
                     scale="sm"
-                    variant="subtle"
+                    variant="primary"  
                   >
                     <ButtonMenuItem width="100%">{t('24H')}</ButtonMenuItem>
                     <ButtonMenuItem width="100%">{t('7D')}</ButtonMenuItem>
                   </ButtonMenu>
                   <Flex mt="24px">
                     <Flex flex="1" flexDirection="column">
-                      <Text color="secondary" fontSize="12px" bold textTransform="uppercase">
+                      <Text color="white" fontSize="12px" bold textTransform="uppercase">
                         {showWeeklyData ? t('Volume 7D') : t('Volume 24H')}
                       </Text>
                       <Text fontSize="24px" bold>
@@ -232,7 +241,7 @@ const PoolPage: React.FC<{ address: string }> = ({ address: routeAddress }) => {
                       <Percent value={showWeeklyData ? poolData.volumeUSDChangeWeek : poolData.volumeUSDChange} />
                     </Flex>
                     <Flex flex="1" flexDirection="column">
-                      <Text color="secondary" fontSize="12px" bold textTransform="uppercase">
+                      <Text color="white" fontSize="12px" bold textTransform="uppercase">
                         {showWeeklyData ? t('LP reward fees 7D') : t('LP reward fees 24H')}
                       </Text>
                       <Text fontSize="24px" bold>
@@ -248,7 +257,7 @@ const PoolPage: React.FC<{ address: string }> = ({ address: routeAddress }) => {
                     </Flex>
                   </Flex>
                 </Flex>
-              </Card>
+              </div>
             </Box>
             <ChartCard variant="pool" chartData={chartData} />
           </ContentLayout>

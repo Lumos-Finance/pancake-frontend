@@ -1,11 +1,15 @@
+import React from 'react'
 import styled from 'styled-components'
 import { Card } from '@pancakeswap/uikit'
 
 export const BodyWrapper = styled(Card)`
-  border-radius: 24px;
-  max-width: 436px;
-  width: 100%;
-  z-index: 1;
+background-color: !important;
+
+backdrop-filter: blur(20px) !important;
+border: solid 2px rgba(199, 194, 194, 0.74) !important;
+border-radius: 1.4rem !important;
+box-shadow: 0 10px 20px 5px rgba(0,0,0,0.3) !important;
+overflow: hidden !important;
 `
 
 /**

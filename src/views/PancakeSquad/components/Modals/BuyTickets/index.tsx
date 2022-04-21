@@ -1,5 +1,5 @@
 /* eslint-disable react/no-array-index-key */
-import { BigNumber } from '@ethersproject/bignumber'
+import { BigNumber } from 'ethers'
 import {
   Box,
   Button,
@@ -17,7 +17,7 @@ import {
 } from '@pancakeswap/uikit'
 import { useTranslation } from 'contexts/Localization'
 import useTheme from 'hooks/useTheme'
-import { useState } from 'react'
+import React, { useState } from 'react'
 import { formatBigNumber } from 'utils/formatBalance'
 import { SaleStatusEnum } from 'views/PancakeSquad/types'
 
@@ -146,11 +146,11 @@ const BuyTicketsModal: React.FC<BuyTicketsModalProps> = ({
                 {t('The network may become busy during the sale period. Consider setting a high gas fee (GWEI).')}
               </Text>
               <Text font-size="12px" color="textSubtle">
-                {t(`Max. Tickets per transaction:`)} {maxPerTransaction || DEFAULT_MAX_PER_TX}
+                {t(`Max. Tickets per transaction: ${maxPerTransaction || DEFAULT_MAX_PER_TX}`)}
               </Text>
               {maxPerAddress > 0 && (
                 <Text font-size="12px" color="textSubtle">
-                  {t(`Max. Tickets per wallet:`)} {maxPerAddress}
+                  {t(`Max. Tickets per wallet: ${maxPerAddress}`)}
                 </Text>
               )}
             </Box>

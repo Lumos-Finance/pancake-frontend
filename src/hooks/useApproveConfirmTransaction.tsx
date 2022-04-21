@@ -1,12 +1,16 @@
-import { useEffect, useReducer, useRef, useCallback } from 'react'
-import noop from 'lodash/noop'
+import React, { useEffect, useReducer, useRef } from 'react'
+import { noop } from 'lodash'
 import { useWeb3React } from '@web3-react/core'
-import { TransactionReceipt, TransactionResponse } from '@ethersproject/providers'
-import useCatchTxError from './useCatchTxError'
+import { ethers } from 'ethers'
+import useToast from 'hooks/useToast'
+import { useTranslation } from 'contexts/Localization'
+import { logError } from 'utils/sentry'
+import { ToastDescriptionWithTx } from 'components/Toast'
 
 type LoadingState = 'idle' | 'loading' | 'success' | 'fail'
 
 type Action =
+  | { type: 'requires_approval' }
   | { type: 'approve_sending' }
   | { type: 'approve_receipt' }
   | { type: 'approve_error' }
@@ -26,6 +30,11 @@ const initialState: State = {
 
 const reducer = (state: State, actions: Action): State => {
   switch (actions.type) {
+    case 'requires_approval':
+      return {
+        ...state,
+        approvalState: 'success',
+      }
     case 'approve_sending':
       return {
         ...state,
@@ -63,12 +72,12 @@ const reducer = (state: State, actions: Action): State => {
 
 interface OnSuccessProps {
   state: State
-  receipt: TransactionReceipt
+  receipt: ethers.providers.TransactionReceipt
 }
 
 interface ApproveConfirmTransaction {
-  onApprove: () => Promise<TransactionResponse>
-  onConfirm: (params?) => Promise<TransactionResponse>
+  onApprove: () => Promise<ethers.providers.TransactionResponse>
+  onConfirm: (params?) => Promise<ethers.providers.TransactionResponse>
   onRequiresApproval?: () => Promise<boolean>
   onSuccess: ({ state, receipt }: OnSuccessProps) => void
   onApproveSuccess?: ({ state, receipt }: OnSuccessProps) => void
@@ -81,46 +90,18 @@ const useApproveConfirmTransaction = ({
   onSuccess = noop,
   onApproveSuccess = noop,
 }: ApproveConfirmTransaction) => {
+  const { t } = useTranslation()
   const { account } = useWeb3React()
   const [state, dispatch] = useReducer(reducer, initialState)
   const handlePreApprove = useRef(onRequiresApproval)
-  const { fetchWithCatchTxError } = useCatchTxError()
-
-  const handleApprove = useCallback(async () => {
-    const receipt = await fetchWithCatchTxError(() => {
-      dispatch({ type: 'approve_sending' })
-      return onApprove()
-    })
-    if (receipt?.status) {
-      dispatch({ type: 'approve_receipt' })
-      onApproveSuccess({ state, receipt })
-    } else {
-      dispatch({ type: 'approve_error' })
-    }
-  }, [onApprove, onApproveSuccess, state, fetchWithCatchTxError])
-
-  const handleConfirm = useCallback(
-    async (params = {}) => {
-      const receipt = await fetchWithCatchTxError(() => {
-        dispatch({ type: 'confirm_sending' })
-        return onConfirm(params)
-      })
-      if (receipt?.status) {
-        dispatch({ type: 'confirm_receipt' })
-        onSuccess({ state, receipt })
-      } else {
-        dispatch({ type: 'confirm_error' })
-      }
-    },
-    [onConfirm, dispatch, onSuccess, state, fetchWithCatchTxError],
-  )
+  const { toastSuccess, toastError } = useToast()
 
   // Check if approval is necessary, re-check if account changes
   useEffect(() => {
     if (account && handlePreApprove.current) {
-      handlePreApprove.current().then((requiresApproval) => {
-        if (!requiresApproval) {
-          dispatch({ type: 'approve_receipt' })
+      handlePreApprove.current().then((result) => {
+        if (result) {
+          dispatch({ type: 'requires_approval' })
         }
       })
     }
@@ -133,8 +114,38 @@ const useApproveConfirmTransaction = ({
     isConfirmed: state.confirmState === 'success',
     hasApproveFailed: state.approvalState === 'fail',
     hasConfirmFailed: state.confirmState === 'fail',
-    handleApprove,
-    handleConfirm,
+    handleApprove: async () => {
+      try {
+        const tx = await onApprove()
+        toastSuccess(`${t('Transaction Submitted')}!`, <ToastDescriptionWithTx txHash={tx.hash} />)
+        dispatch({ type: 'approve_sending' })
+        const receipt = await tx.wait()
+        if (receipt.status) {
+          dispatch({ type: 'approve_receipt' })
+          onApproveSuccess({ state, receipt })
+        }
+      } catch (error) {
+        dispatch({ type: 'approve_error' })
+        logError(error)
+        toastError(t('Error'), t('Please try again. Confirm the transaction and make sure you are paying enough gas!'))
+      }
+    },
+    handleConfirm: async (params = {}) => {
+      dispatch({ type: 'confirm_sending' })
+      try {
+        const tx = await onConfirm(params)
+        toastSuccess(`${t('Transaction Submitted')}!`, <ToastDescriptionWithTx txHash={tx.hash} />)
+        const receipt = await tx.wait()
+        if (receipt.status) {
+          dispatch({ type: 'confirm_receipt' })
+          onSuccess({ state, receipt })
+        }
+      } catch (error) {
+        dispatch({ type: 'confirm_error' })
+        logError(error)
+        toastError(t('Error'), t('Please try again. Confirm the transaction and make sure you are paying enough gas!'))
+      }
+    },
   }
 }
 

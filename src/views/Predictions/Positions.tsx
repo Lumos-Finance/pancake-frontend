@@ -1,20 +1,18 @@
-import { useEffect, useState } from 'react'
+import React from 'react'
 import styled from 'styled-components'
-import SwiperCore, { Keyboard, Mousewheel, FreeMode } from 'swiper'
+import SwiperCore, { Keyboard, Mousewheel } from 'swiper'
 import { Swiper, SwiperSlide } from 'swiper/react'
-import 'swiper/css/bundle'
 import { Box } from '@pancakeswap/uikit'
-import { useGetSortedRoundsCurrentEpoch } from 'state/predictions/hooks'
-import delay from 'lodash/delay'
+import { useGetCurrentEpoch, useGetSortedRounds } from 'state/predictions/hooks'
+import 'swiper/swiper.min.css'
 import RoundCard from './components/RoundCard'
 import Menu from './components/Menu'
 import useSwiper from './hooks/useSwiper'
 import useOnNextRound from './hooks/useOnNextRound'
 import useOnViewChange from './hooks/useOnViewChange'
 import { PageView } from './types'
-import { CHART_DOT_CLICK_EVENT } from './helpers'
 
-SwiperCore.use([Keyboard, Mousewheel, FreeMode])
+SwiperCore.use([Keyboard, Mousewheel])
 
 const StyledSwiper = styled.div`
   .swiper-wrapper {
@@ -26,29 +24,16 @@ const StyledSwiper = styled.div`
     width: 320px;
   }
 `
-
 const Positions: React.FC<{ view?: PageView }> = ({ view }) => {
-  const { setSwiper, swiper } = useSwiper()
-  const { currentEpoch, rounds } = useGetSortedRoundsCurrentEpoch()
+  const { setSwiper } = useSwiper()
+  const rounds = useGetSortedRounds()
+  const currentEpoch = useGetCurrentEpoch()
   const previousEpoch = currentEpoch > 0 ? currentEpoch - 1 : currentEpoch
-  const swiperIndex = rounds.findIndex((round) => round.epoch === previousEpoch)
+  const previousRound = rounds.find((round) => round.epoch === previousEpoch)
+  const swiperIndex = rounds.indexOf(previousRound)
 
   useOnNextRound()
   useOnViewChange(swiperIndex, view)
-
-  useEffect(() => {
-    const handleChartDotClick = () => {
-      setIsChangeTransition(true)
-      delay(() => setIsChangeTransition(false), 3000)
-    }
-    swiper?.el?.addEventListener(CHART_DOT_CLICK_EVENT, handleChartDotClick)
-
-    return () => {
-      swiper?.el?.removeEventListener(CHART_DOT_CLICK_EVENT, handleChartDotClick)
-    }
-  }, [swiper?.el])
-
-  const [isChangeTransition, setIsChangeTransition] = useState(false)
 
   return (
     <Box overflow="hidden">
@@ -59,15 +44,18 @@ const Positions: React.FC<{ view?: PageView }> = ({ view }) => {
           onSwiper={setSwiper}
           spaceBetween={16}
           slidesPerView="auto"
-          freeMode={{ enabled: true, sticky: true, momentumRatio: 0.25, momentumVelocityRatio: 0.5 }}
+          freeMode
+          freeModeSticky
           centeredSlides
+          freeModeMomentumRatio={0.25}
+          freeModeMomentumVelocityRatio={0.5}
           mousewheel
           keyboard
           resizeObserver
         >
           {rounds.map((round) => (
             <SwiperSlide key={round.epoch}>
-              {({ isActive }) => <RoundCard round={round} isActive={isChangeTransition && isActive} />}
+              <RoundCard round={round} />
             </SwiperSlide>
           ))}
         </Swiper>

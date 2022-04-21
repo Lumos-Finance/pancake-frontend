@@ -1,4 +1,5 @@
 import { Currency, Percent, Price } from '@pancakeswap/sdk'
+import React from 'react'
 import { Text } from '@pancakeswap/uikit'
 import { useTranslation } from 'contexts/Localization'
 import { AutoColumn } from '../../components/Layout/Column'
@@ -43,7 +44,7 @@ function PoolPriceBar({
           <Text>
             {noLiquidity && price
               ? '100'
-              : (poolTokenPercentage?.lessThan(ONE_BIPS) ? '<0.01' : poolTokenPercentage?.toFixed(2)) ?? '0'}
+              : (poolTokenPercentage?.lessThan(ONE_BIPS) ? '0.01' : poolTokenPercentage?.toFixed(2)) ?? '0'}
             %
           </Text>
           <Text fontSize="14px" pt={1}>

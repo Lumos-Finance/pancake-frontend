@@ -3,6 +3,7 @@ import {
   Box,
   CheckmarkCircleIcon,
   Flex,
+  Image,
   MedalBronzeIcon,
   MedalGoldIcon,
   MedalPurpleIcon,
@@ -12,11 +13,9 @@ import {
   TabMenu,
   Text,
 } from '@pancakeswap/uikit'
-import Image from 'next/image'
-import Trans from 'components/Trans'
 import prizes, { Tiers } from 'config/constants/trading-competition/prizes'
 import { useTranslation } from 'contexts/Localization'
-import { useState } from 'react'
+import React, { useState } from 'react'
 import { BoldTd, StyledPrizeTable, Td } from '../../StyledPrizeTable'
 
 const COLOR_GOLD = '#FFBF33'
@@ -29,42 +28,42 @@ const tierStyleMap = {
   [Tiers.GOLD]: {
     icon: MedalGoldIcon,
     label: {
-      text: <Trans>Gold</Trans>,
+      text: 'Gold',
     },
     color: COLOR_GOLD,
   },
   [Tiers.SILVER]: {
     icon: MedalSilverIcon,
     label: {
-      text: <Trans>Silver</Trans>,
+      text: 'Silver',
     },
     color: COLOR_SILVER,
   },
   [Tiers.BRONZE]: {
     icon: MedalBronzeIcon,
     label: {
-      text: <Trans>Bronze</Trans>,
+      text: 'Bronze',
     },
     color: COLOR_BRONZE,
   },
   [Tiers.SILVER]: {
     icon: MedalSilverIcon,
     label: {
-      text: <Trans>Silver</Trans>,
+      text: 'Silver',
     },
     color: COLOR_SILVER,
   },
   [Tiers.PURPLE]: {
     icon: MedalPurpleIcon,
     label: {
-      text: <Trans>Purple</Trans>,
+      text: 'Purple',
     },
     color: COLOR_PURPLE,
   },
   [Tiers.TEAL]: {
     icon: MedalTealIcon,
     label: {
-      text: <Trans>Teal</Trans>,
+      text: 'Teal',
     },
     color: COLOR_TEAL,
   },
@@ -105,7 +104,7 @@ const PrizesGrid = () => {
                   <Td>
                     <Icon />
                     <Text color={color} fontSize="12px" bold textTransform="uppercase">
-                      {label.text}
+                      {t(label.text)}
                     </Text>
                   </Td>
                   <BoldTd>

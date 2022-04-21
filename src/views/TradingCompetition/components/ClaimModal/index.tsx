@@ -1,17 +1,14 @@
+import React, { useState } from 'react'
 import styled from 'styled-components'
-import { Modal, Button, Flex, AutoRenewIcon, Heading, Text } from '@pancakeswap/uikit'
-import Image from 'next/image'
+import { Modal, Button, Flex, AutoRenewIcon, Heading, Text, Image } from '@pancakeswap/uikit'
 import { useTranslation } from 'contexts/Localization'
-import { useTradingCompetitionContractMobox } from 'hooks/useContract'
+import { useTradingCompetitionContractV2 } from 'hooks/useContract'
 import useToast from 'hooks/useToast'
 import { useCallWithGasPrice } from 'hooks/useCallWithGasPrice'
-import useCatchTxError from 'hooks/useCatchTxError'
 import { ToastDescriptionWithTx } from 'components/Toast'
 import { useCompetitionRewards, getRewardGroupAchievements } from '../../helpers'
 import { CompetitionProps } from '../../types'
-import MboxBunnyNft from '../../pngs/mobox-bunny-nft.png'
-import MboxAllBunnies from '../../pngs/mbox-all-bunnies.png'
-import MysteryBox from '../../pngs/mystery-box.png'
+import NftBunnies from '../../pngs/fan-token-champions.png'
 
 const ImageWrapper = styled(Flex)`
   justify-content: center;
@@ -23,35 +20,48 @@ const ImageWrapper = styled(Flex)`
 `
 
 const ClaimModal: React.FC<CompetitionProps> = ({ onDismiss, onClaimSuccess, userTradingInformation }) => {
-  const tradingCompetitionContract = useTradingCompetitionContractMobox()
-  const { toastSuccess } = useToast()
-  const { fetchWithCatchTxError, loading: isConfirming } = useCatchTxError()
+  const [isConfirming, setIsConfirming] = useState(false)
+  const tradingCompetitionContract = useTradingCompetitionContractV2()
+  const { toastSuccess, toastError } = useToast()
   const { t } = useTranslation()
 
-  const { userRewardGroup, userCakeRewards, userMoboxRewards, userPointReward, canClaimMysteryBox, canClaimNFT } =
-    userTradingInformation
-  const { cakeReward, moboxReward } = useCompetitionRewards({
+  const {
+    userRewardGroup,
     userCakeRewards,
-    userMoboxRewards,
+    userLazioRewards,
+    userPortoRewards,
+    userSantosRewards,
+    userPointReward,
+    canClaimNFT,
+  } = userTradingInformation
+  const { cakeReward, lazioReward, portoReward, santosReward } = useCompetitionRewards({
+    userCakeRewards,
+    userLazioRewards,
+    userPortoRewards,
+    userSantosRewards,
   })
   const achievement = getRewardGroupAchievements(userRewardGroup, userPointReward)
   const { callWithGasPrice } = useCallWithGasPrice()
 
   const handleClaimClick = async () => {
-    const receipt = await fetchWithCatchTxError(() => {
-      return callWithGasPrice(tradingCompetitionContract, 'claimReward')
-    })
-    if (receipt?.status) {
+    const tx = await callWithGasPrice(tradingCompetitionContract, 'claimReward')
+    toastSuccess(`${t('Transaction Submitted')}!`, <ToastDescriptionWithTx txHash={tx.hash} />)
+    setIsConfirming(true)
+    const receipt = await tx.wait()
+    if (receipt.status) {
       toastSuccess(t('You have claimed your rewards!'), <ToastDescriptionWithTx txHash={receipt.transactionHash} />)
       onDismiss()
       onClaimSuccess()
+    } else {
+      toastError(t('Error'), t('Please try again. Confirm the transaction and make sure you are paying enough gas!'))
+      setIsConfirming(false)
     }
   }
 
   return (
     <Modal title={t('Collect Winnings')} onDismiss={onDismiss}>
       <Flex width="100%" flexDirection="column" alignItems="center" justifyContent="center" maxWidth="360px">
-        <Text color="secondary" bold>
+        <Text color="secondary" bold fontSize="16px">
           {t('Congratulations! You won')}:
         </Text>
         <Flex mt="16px" alignItems="center">
@@ -66,35 +76,22 @@ const ClaimModal: React.FC<CompetitionProps> = ({ onDismiss, onClaimSuccess, use
           {cakeReward.toFixed(2)} CAKE
         </Heading>
         <Heading mt="16px" scale="md" mb={canClaimNFT ? '16px' : '0px'}>
-          {moboxReward.toFixed(2)} MBOX
+          {lazioReward.toFixed(2)} LAZIO
+        </Heading>
+        <Heading mt="16px" scale="md" mb={canClaimNFT ? '16px' : '0px'}>
+          {portoReward.toFixed(2)} PORTO
+        </Heading>
+        <Heading mt="16px" scale="md" mb={canClaimNFT ? '16px' : '0px'}>
+          {santosReward.toFixed(2)} SANTOS
         </Heading>
         {/* NFT */}
         {canClaimNFT ? (
           <Flex alignItems="center" flexDirection="column" width="100%">
             <ImageWrapper>
-              <Image src={MboxBunnyNft} width={128} height={128} />
+              <Image src={NftBunnies} width={128} height={128} />
             </ImageWrapper>
-            <Text mt="8px">{t('Collectible NFT')}</Text>
-          </Flex>
-        ) : null}
-        {canClaimMysteryBox ? (
-          <Flex mt="8px" alignItems="center" flexDirection="column" width="100%">
-            <ImageWrapper>
-              <Image src={MysteryBox} width={78} height={56} />
-            </ImageWrapper>
-            <Text mt="8px">{t('Mystery Box')}</Text>
-          </Flex>
-        ) : null}
-        {canClaimNFT ? (
-          <Flex mt="8px" alignItems="center" flexDirection="column" width="100%">
-            <ImageWrapper>
-              <Image src={MboxAllBunnies} width={128} height={95} />
-            </ImageWrapper>
-            <Text mt="8px">{t('Mobox Avatar NFT')}</Text>
-            <Text color="textSubtle" mt="8px" fontSize="12px" textAlign="center">
-              {t(
-                'Your Mobox Avatars NFT prizes will be airdropped to your wallet address before 00:00 UTC 25th April.',
-              )}
+            <Text mt="8px" fontSize="16px">
+              {t('Collectible NFT')}
             </Text>
           </Flex>
         ) : null}

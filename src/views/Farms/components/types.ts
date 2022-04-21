@@ -1,6 +1,3 @@
-import BigNumber from 'bignumber.js'
-import { DeserializedFarm } from 'state/types'
-
 export type TableProps = {
   data?: TableDataTypes[]
   selectedFilters?: string
@@ -95,9 +92,3 @@ export const DesktopColumnSchema: ColumnsDefTypes[] = [
     label: '',
   },
 ]
-
-export interface FarmWithStakedValue extends DeserializedFarm {
-  apr?: number
-  lpRewardsApr?: number
-  liquidity?: BigNumber
-}

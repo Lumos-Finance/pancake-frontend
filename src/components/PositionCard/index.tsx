@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import React, { useState } from 'react'
 import { JSBI, Pair, Percent } from '@pancakeswap/sdk'
 import {
   Button,
@@ -11,8 +11,8 @@ import {
   CardProps,
   AddIcon,
 } from '@pancakeswap/uikit'
+import { Link } from 'react-router-dom'
 import styled from 'styled-components'
-import { NextLinkFromReactRouter } from 'components/NextLink'
 import { useTranslation } from 'contexts/Localization'
 import useActiveWeb3React from 'hooks/useActiveWeb3React'
 import useTotalSupply from '../../hooks/useTotalSupply'
@@ -71,12 +71,13 @@ export function MinimalPositionCard({ pair, showUnwrapped = false }: PositionCar
   return (
     <>
       {userPoolBalance && JSBI.greaterThan(userPoolBalance.raw, JSBI.BigInt(0)) ? (
-        <Card>
-          <CardBody>
-            <AutoColumn gap="16px">
+        <div className='transparent'>
+
+          <CardBody className='transparent '>
+            <AutoColumn gap="16px" className='transparent'>
               <FixedHeightRow>
                 <RowFixed>
-                  <Text color="secondary" bold>
+                  <Text className='btncolor2' color="secondary" bold>
                     {t('LP tokens in your wallet')}
                   </Text>
                 </RowFixed>
@@ -84,23 +85,23 @@ export function MinimalPositionCard({ pair, showUnwrapped = false }: PositionCar
               <FixedHeightRow onClick={() => setShowMore(!showMore)}>
                 <RowFixed>
                   <DoubleCurrencyLogo currency0={currency0} currency1={currency1} margin size={20} />
-                  <Text small color="textSubtle">
+                  <Text className='btncolor2' small color="textSubtle">
                     {currency0.symbol}-{currency1.symbol} LP
                   </Text>
                 </RowFixed>
                 <RowFixed>
-                  <Text>{userPoolBalance ? userPoolBalance.toSignificant(4) : '-'}</Text>
+                  <Text >{userPoolBalance ? userPoolBalance.toSignificant(4) : '-'}</Text>
                 </RowFixed>
               </FixedHeightRow>
               <AutoColumn gap="4px">
                 <FixedHeightRow>
-                  <Text color="textSubtle" small>
+                  <Text className='btncolor2' color="textSubtle" small>
                     {t('Share of Pool')}:
                   </Text>
                   <Text>{poolTokenPercentage ? `${poolTokenPercentage.toFixed(6)}%` : '-'}</Text>
                 </FixedHeightRow>
                 <FixedHeightRow>
-                  <Text color="textSubtle" small>
+                  <Text className='btncolor2' color="textSubtle" small>
                     {t('Pooled %asset%', { asset: currency0.symbol })}:
                   </Text>
                   {token0Deposited ? (
@@ -112,7 +113,7 @@ export function MinimalPositionCard({ pair, showUnwrapped = false }: PositionCar
                   )}
                 </FixedHeightRow>
                 <FixedHeightRow>
-                  <Text color="textSubtle" small>
+                  <Text className='btncolor2' color="textSubtle" small>
                     {t('Pooled %asset%', { asset: currency1.symbol })}:
                   </Text>
                   {token1Deposited ? (
@@ -126,7 +127,9 @@ export function MinimalPositionCard({ pair, showUnwrapped = false }: PositionCar
               </AutoColumn>
             </AutoColumn>
           </CardBody>
-        </Card>
+        </div>
+     
+
       ) : (
         <LightCard>
           <Text fontSize="14px" style={{ textAlign: 'center' }}>
@@ -174,7 +177,7 @@ export default function FullPositionCard({ pair, ...props }: PositionCardProps) 
       : [undefined, undefined]
 
   return (
-    <Card style={{ borderRadius: '12px' }} {...props}>
+    <div className='glass'>
       <Flex justifyContent="space-between" role="button" onClick={() => setShowMore(!showMore)} p="16px">
         <Flex flexDirection="column">
           <Flex alignItems="center" mb="4px">
@@ -228,35 +231,37 @@ export default function FullPositionCard({ pair, ...props }: PositionCardProps) 
             <Text color="textSubtle">{t('Share of Pool')}</Text>
             <Text>
               {poolTokenPercentage
-                ? `${poolTokenPercentage.toFixed(2) === '0.00' ? '<0.01' : poolTokenPercentage.toFixed(2)}%`
+                ? `${poolTokenPercentage.toFixed(2) === '0.00' ? '0.01' : poolTokenPercentage.toFixed(2)}%`
                 : '-'}
             </Text>
           </FixedHeightRow>
 
           {userPoolBalance && JSBI.greaterThan(userPoolBalance.raw, BIG_INT_ZERO) && (
-            <Flex flexDirection="column">
+            <Flex  flexDirection="column">
               <Button
-                as={NextLinkFromReactRouter}
+              className='btncolor'
+                as={Link}
                 to={`/remove/${currencyId(currency0)}/${currencyId(currency1)}`}
-                variant="primary"
                 width="100%"
                 mb="8px"
               >
                 {t('Remove')}
               </Button>
               <Button
-                as={NextLinkFromReactRouter}
+              className='btncolor2'
+                as={Link}
                 to={`/add/${currencyId(currency0)}/${currencyId(currency1)}`}
                 variant="text"
-                startIcon={<AddIcon color="primary" />}
+                startIcon={<AddIcon className='btncolor mX'/>}
                 width="100%"
               >
-                {t('Add liquidity instead')}
+              
+                {t('Add liquidity instead') }
               </Button>
             </Flex>
           )}
         </AutoColumn>
       )}
-    </Card>
+    </div>
   )
 }

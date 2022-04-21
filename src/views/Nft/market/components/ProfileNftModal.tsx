@@ -1,3 +1,4 @@
+import React from 'react'
 import { InjectedModalProps, Modal, Flex, Text, Button, useModal, Link, Grid, LinkExternal } from '@pancakeswap/uikit'
 import useTheme from 'hooks/useTheme'
 import styled from 'styled-components'
@@ -20,11 +21,10 @@ const TextWrapper = styled(Flex)`
 
 interface ProfileNftModalProps extends InjectedModalProps {
   nft: NftToken
-  onSuccess?: () => void
 }
 
-const ProfileNftModal: React.FC<ProfileNftModalProps> = ({ nft, onDismiss, onSuccess }) => {
-  const [onEditProfileModal] = useModal(<EditProfileModal onSuccess={onSuccess} />, false)
+const ProfileNftModal: React.FC<ProfileNftModalProps> = ({ nft, onDismiss }) => {
+  const [onEditProfileModal] = useModal(<EditProfileModal />, false)
   const { t } = useTranslation()
   const { theme } = useTheme()
 
@@ -38,7 +38,7 @@ const ProfileNftModal: React.FC<ProfileNftModalProps> = ({ nft, onDismiss, onSuc
           <Grid flex="1" gridTemplateColumns="1fr 1fr" alignItems="center">
             <Text bold>{nft.name}</Text>
             <Text fontSize="12px" color="textSubtle" textAlign="right">
-              {nft?.collectionName}
+              {nft.collectionName}
             </Text>
             {/* TODO: Add lowestPrice when available */}
           </Grid>

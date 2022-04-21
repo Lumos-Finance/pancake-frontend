@@ -1,16 +1,17 @@
 // TODO PCS refactor ternaries
 /* eslint-disable no-nested-ternary */
-import { useCallback, useState, useMemo, useEffect, Fragment } from 'react'
+import React, { useCallback, useState, useMemo, useEffect } from 'react'
 import styled from 'styled-components'
 import { formatDistanceToNowStrict } from 'date-fns'
 import { Text, Flex, Box, Radio, Skeleton, LinkExternal, ArrowForwardIcon, ArrowBackIcon } from '@pancakeswap/uikit'
-import { formatAmount } from 'utils/formatInfoNumbers'
+import { formatAmount } from 'views/Info/utils/formatInfoNumbers'
 import { getBscScanLink } from 'utils'
 import truncateHash from 'utils/truncateHash'
 import { Transaction, TransactionType } from 'state/info/types'
 import { ITEMS_PER_INFO_TABLE_PAGE } from 'config/constants/info'
 import { useTranslation } from 'contexts/Localization'
 import { ClickableColumnHeader, TableWrapper, PageButtons, Arrow, Break } from './shared'
+import './styles.css'
 
 const Wrapper = styled.div`
   width: 100%;
@@ -101,7 +102,7 @@ const DataRow: React.FC<{ transaction: Transaction }> = ({ transaction }) => {
 
   return (
     <ResponsiveGrid>
-      <LinkExternal href={getBscScanLink(transaction.hash, 'transaction')}>
+      <LinkExternal href={getBscScanLink(transaction.hash, 'transaction')} color="#21C797">
         <Text>
           {transaction.type === TransactionType.MINT
             ? t('Add %token0% and %token1%', { token0: transaction.token0Symbol, token1: transaction.token1Symbol })
@@ -117,7 +118,7 @@ const DataRow: React.FC<{ transaction: Transaction }> = ({ transaction }) => {
       <Text>
         <Text>{`${formatAmount(abs1)} ${transaction.token1Symbol}`}</Text>
       </Text>
-      <LinkExternal href={getBscScanLink(transaction.sender, 'address')}>
+      <LinkExternal href={getBscScanLink(transaction.sender, 'address')} color="#21C797">
         {truncateHash(transaction.sender)}
       </LinkExternal>
       <Text>{formatDistanceToNowStrict(parseInt(transaction.timestamp, 10) * 1000)}</Text>
@@ -203,38 +204,38 @@ const TransactionTable: React.FC<{
 
   return (
     <Wrapper>
-      <Flex mb="16px">
-        <Flex flexDirection={['column', 'row']}>
+      <Flex className='flex gap'>
+        <Flex flexDirection={['column', 'row']} className="gap">
           <RadioGroup onClick={() => handleFilter(undefined)}>
             <Radio onChange={() => null} scale="sm" checked={txFilter === undefined} />
-            <Text ml="8px">{t('All')}</Text>
+            <Text ml="8px" mr="10px">{t('All')}</Text>
           </RadioGroup>
 
           <RadioGroup onClick={() => handleFilter(TransactionType.SWAP)}>
             <Radio onChange={() => null} scale="sm" checked={txFilter === TransactionType.SWAP} />
-            <Text ml="8px">{t('Swaps')}</Text>
+            <Text ml="8px" mr="10px">{t('Swaps')}</Text>
           </RadioGroup>
         </Flex>
 
-        <Flex flexDirection={['column', 'row']}>
+        <Flex flexDirection={['column', 'row']} className="gap">
           <RadioGroup onClick={() => handleFilter(TransactionType.MINT)}>
             <Radio onChange={() => null} scale="sm" checked={txFilter === TransactionType.MINT} />
-            <Text ml="8px">{t('Adds')}</Text>
+            <Text ml="8px" mr="10px">{t('Adds')}</Text>
           </RadioGroup>
 
           <RadioGroup onClick={() => handleFilter(TransactionType.BURN)}>
             <Radio onChange={() => null} scale="sm" checked={txFilter === TransactionType.BURN} />
-            <Text ml="8px">{t('Removes')}</Text>
+            <Text ml="8px" mr="10px">{t('Removes')}</Text>
           </RadioGroup>
         </Flex>
       </Flex>
-      <TableWrapper>
+      <TableWrapper id='transactionTable' className='glass'>
         <ResponsiveGrid>
-          <Text color="secondary" fontSize="12px" bold textTransform="uppercase">
+          <Text color="#21C797" fontSize="12px" bold textTransform="uppercase">
             {t('Action')}
           </Text>
           <ClickableColumnHeader
-            color="secondary"
+            color="#21C797"
             fontSize="12px"
             bold
             onClick={() => handleSort(SORT_FIELD.amountUSD)}
@@ -243,7 +244,7 @@ const TransactionTable: React.FC<{
             {t('Total Value')} {arrow(SORT_FIELD.amountUSD)}
           </ClickableColumnHeader>
           <ClickableColumnHeader
-            color="secondary"
+            color="#21C797"
             fontSize="12px"
             bold
             onClick={() => handleSort(SORT_FIELD.amountToken0)}
@@ -252,7 +253,7 @@ const TransactionTable: React.FC<{
             {t('Token Amount')} {arrow(SORT_FIELD.amountToken0)}
           </ClickableColumnHeader>
           <ClickableColumnHeader
-            color="secondary"
+            color="#21C797"
             fontSize="12px"
             bold
             onClick={() => handleSort(SORT_FIELD.amountToken1)}
@@ -261,7 +262,7 @@ const TransactionTable: React.FC<{
             {t('Token Amount')} {arrow(SORT_FIELD.amountToken1)}
           </ClickableColumnHeader>
           <ClickableColumnHeader
-            color="secondary"
+            color="#21C797"
             fontSize="12px"
             bold
             onClick={() => handleSort(SORT_FIELD.sender)}
@@ -270,7 +271,7 @@ const TransactionTable: React.FC<{
             {t('Account')} {arrow(SORT_FIELD.sender)}
           </ClickableColumnHeader>
           <ClickableColumnHeader
-            color="secondary"
+            color="#21C797"
             fontSize="12px"
             bold
             onClick={() => handleSort(SORT_FIELD.timestamp)}
@@ -287,10 +288,10 @@ const TransactionTable: React.FC<{
               if (transaction) {
                 return (
                   // eslint-disable-next-line react/no-array-index-key
-                  <Fragment key={index}>
+                  <React.Fragment key={index}>
                     <DataRow transaction={transaction} />
                     <Break />
-                  </Fragment>
+                  </React.Fragment>
                 )
               }
               return null
@@ -306,7 +307,7 @@ const TransactionTable: React.FC<{
                   setPage(page === 1 ? page : page - 1)
                 }}
               >
-                <ArrowBackIcon color={page === 1 ? 'textDisabled' : 'primary'} />
+                <ArrowBackIcon color={page === 1 ? 'textDisabled' : '#21C797'} />
               </Arrow>
 
               <Text>{t('Page %page% of %maxPage%', { page, maxPage })}</Text>
@@ -315,7 +316,7 @@ const TransactionTable: React.FC<{
                   setPage(page === maxPage ? page : page + 1)
                 }}
               >
-                <ArrowForwardIcon color={page === maxPage ? 'textDisabled' : 'primary'} />
+                <ArrowForwardIcon color={page === maxPage ? 'textDisabled' : '#21C797'} />
               </Arrow>
             </PageButtons>
           </>

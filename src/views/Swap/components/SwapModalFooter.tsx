@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import React, { useMemo, useState } from 'react'
 import styled from 'styled-components'
 import { Trade, TradeType } from '@pancakeswap/sdk'
 import { Button, Text, AutoRenewIcon } from '@pancakeswap/uikit'
@@ -15,6 +15,7 @@ import QuestionHelper from 'components/QuestionHelper'
 import { AutoRow, RowBetween, RowFixed } from 'components/Layout/Row'
 import FormattedPriceImpact from './FormattedPriceImpact'
 import { StyledBalanceMaxMini, SwapCallbackError } from './styleds'
+import "./styles.css"
 
 const SwapModalFooterContainer = styled(AutoColumn)`
   margin-top: 24px;
@@ -48,10 +49,11 @@ export default function SwapModalFooter({
 
   return (
     <>
-      <SwapModalFooterContainer>
+      <SwapModalFooterContainer className="background">
         <RowBetween align="center">
           <Text fontSize="14px">{t('Price')}</Text>
           <Text
+            className="text"
             fontSize="14px"
             style={{
               justifyContent: 'center',
@@ -109,10 +111,10 @@ export default function SwapModalFooter({
             <QuestionHelper
               text={
                 <>
-                  <Text mb="12px">{t('For each trade a %amount% fee is paid', { amount: '0.25%' })}</Text>
-                  <Text>- {t('%amount% to LP token holders', { amount: '0.17%' })}</Text>
-                  <Text>- {t('%amount% to the Treasury', { amount: '0.03%' })}</Text>
-                  <Text>- {t('%amount% towards CAKE buyback and burn', { amount: '0.05%' })}</Text>
+                  <Text className="text" mb="12px">{t('For each trade a %amount% fee is paid', { amount: '0.25%' })}</Text>
+                  <Text className="text">- {t('%amount% to LP token holders', { amount: '0.17%' })}</Text>
+                  <Text className="text">- {t('%amount% to the Treasury', { amount: '0.03%' })}</Text>
+                  <Text className="text">- {t('%amount% towards TORG buyback and burn', { amount: '0.05%' })}</Text>
                 </>
               }
               ml="4px"
@@ -132,6 +134,7 @@ export default function SwapModalFooter({
           mt="12px"
           id="confirm-swap-or-send"
           width="100%"
+          className='btn'
         >
           {severity > 2 ? t('Swap Anyway') : t('Confirm Swap')}
         </Button>

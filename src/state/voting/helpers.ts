@@ -1,20 +1,18 @@
-import { SNAPSHOT_API } from 'config/constants/endpoints'
 import request, { gql } from 'graphql-request'
-import { getVotingPowerByCakeStrategy } from 'views/Voting/helpers'
+import { SNAPSHOT_API, SNAPSHOT_VOTING_API } from 'config/constants/endpoints'
 import { Proposal, ProposalState, Vote, VoteWhere } from 'state/types'
-import _chunk from 'lodash/chunk'
-import _flatten from 'lodash/flatten'
+import { simpleRpcProvider } from 'utils/providers'
 
 export const getProposals = async (first = 5, skip = 0, state = ProposalState.ACTIVE): Promise<Proposal[]> => {
   const response: { proposals: Proposal[] } = await request(
     SNAPSHOT_API,
     gql`
-      query getProposals($first: Int!, $skip: Int!, $state: String!, $orderDirection: OrderDirection) {
+      query getProposals($first: Int!, $skip: Int!, $state: String!) {
         proposals(
           first: $first
           skip: $skip
           orderBy: "end"
-          orderDirection: $orderDirection
+          orderDirection: desc
           where: { space_in: "cake.eth", state: $state }
         ) {
           id
@@ -33,7 +31,7 @@ export const getProposals = async (first = 5, skip = 0, state = ProposalState.AC
         }
       }
     `,
-    { first, skip, state, orderDirection: state === ProposalState.CLOSED ? 'desc' : 'asc' },
+    { first, skip, state },
   )
   return response.proposals
 }
@@ -53,7 +51,6 @@ export const getProposal = async (id: string): Promise<Proposal> => {
           snapshot
           state
           author
-          votes
           space {
             id
             name
@@ -83,6 +80,7 @@ export const getVotes = async (first: number, skip: number, where: VoteWhere): P
           proposal {
             choices
           }
+          metadata
         }
       }
     `,
@@ -91,13 +89,49 @@ export const getVotes = async (first: number, skip: number, where: VoteWhere): P
   return response.votes
 }
 
-export const getAllVotes = async (proposal: Proposal, votesPerChunk = 30000): Promise<Vote[]> => {
-  const voters = await new Promise<Vote[]>((resolve, reject) => {
+export const getVoteVerificationStatuses = async (
+  votes: Vote[],
+  block?: number,
+): Promise<{ [key: string]: boolean }> => {
+  const blockNumber = block || (await simpleRpcProvider.getBlockNumber())
+
+  const votesToVerify = votes.map((vote) => ({
+    address: vote.voter,
+    verificationHash: vote.metadata?.verificationHash,
+    total: vote.metadata?.votingPower,
+  }))
+  const response = await fetch(`${SNAPSHOT_VOTING_API}/verify`, {
+    method: 'post',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      block: blockNumber,
+      votes: votesToVerify,
+    }),
+  })
+
+  if (!response.ok) {
+    throw new Error(response.statusText)
+  }
+
+  const data = await response.json()
+  return votes.reduce((accum, vote) => {
+    return {
+      ...accum,
+      [vote.id]: data.data[vote.voter.toLowerCase()]?.isValid === true,
+    }
+  }, {})
+}
+
+export const getAllVotes = async (proposalId: string, block?: number, votesPerChunk = 1000): Promise<Vote[]> => {
+  // const blockNumber = block || (await simpleRpcProvider.getBlockNumber())
+  return new Promise((resolve, reject) => {
     let votes: Vote[] = []
 
     const fetchVoteChunk = async (newSkip: number) => {
       try {
-        const voteChunk = await getVotes(votesPerChunk, newSkip, { proposal: proposal.id })
+        const voteChunk = await getVotes(votesPerChunk, newSkip, { proposal: proposalId })
 
         if (voteChunk.length === 0) {
           resolve(votes)
@@ -112,16 +146,4 @@ export const getAllVotes = async (proposal: Proposal, votesPerChunk = 30000): Pr
 
     fetchVoteChunk(0)
   })
-
-  const votingPowers = await getVotingPowerByCakeStrategy(
-    voters.map((v) => v.voter),
-    parseInt(proposal.snapshot),
-  )
-
-  return voters.map((v) => ({
-    ...v,
-    metadata: {
-      votingPower: votingPowers[v.voter] || '0',
-    },
-  }))
 }

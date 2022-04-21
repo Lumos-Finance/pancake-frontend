@@ -1,12 +1,10 @@
-import { useMemo, useState } from 'react'
+import React, { useMemo, useState } from 'react'
 import { Skeleton, Table, Td, Th, Flex, ArrowUpIcon, ArrowDownIcon } from '@pancakeswap/uikit'
+import { useHistory } from 'react-router'
 import times from 'lodash/times'
-import { useRouter } from 'next/router'
 import { formatNumber } from 'utils/formatBalance'
 import { useTranslation } from 'contexts/Localization'
 import CollapsibleCard from 'components/CollapsibleCard'
-import orderBy from 'lodash/orderBy'
-import { useGetCollection } from 'state/nftMarket/hooks'
 import { useGetLowestPriceFromBunnyId } from '../../hooks/useGetLowestPrice'
 import { BNBAmountLabel } from '../../components/CollectibleCard/styles'
 import { nftsBaseUrl } from '../../constants'
@@ -38,11 +36,13 @@ const LowestPriceCell: React.FC<{ bunnyId: string }> = ({ bunnyId }) => {
 
 const PancakeBunniesTraits: React.FC<PancakeBunniesTraitsProps> = ({ collectionAddress }) => {
   const [raritySort, setRaritySort] = useState<SortType>('asc')
-  const collection = useGetCollection(collectionAddress)
-  const totalBunnyCount = Number(collection?.totalSupply)
   const { t } = useTranslation()
-  const { data: distributionData, isFetching: isFetchingDistribution } = useGetCollectionDistributionPB()
-  const { push } = useRouter()
+  const { push } = useHistory()
+  const {
+    data: distributionData,
+    total: totalBunnyCount,
+    isFetching: isFetchingDistribution,
+  } = useGetCollectionDistributionPB()
 
   const sortedTokenList = useMemo(() => {
     if (!distributionData || !Object.keys(distributionData)) return []
@@ -50,11 +50,11 @@ const PancakeBunniesTraits: React.FC<PancakeBunniesTraitsProps> = ({ collectionA
     const distributionKeys: string[] = Object.keys(distributionData)
     const distributionValues: any[] = Object.values(distributionData)
 
-    return orderBy(
-      distributionValues.map((token, index) => ({ ...token, tokenId: distributionKeys[index] })),
-      (token) => token.tokenCount,
-      raritySort,
-    )
+    return distributionValues
+      .map((token, index) => ({ ...token, tokenId: distributionKeys[index] }))
+      .sort((tokenA, tokenB) => {
+        return raritySort === 'asc' ? tokenA.tokenCount - tokenB.tokenCount : tokenB.tokenCount - tokenA.tokenCount
+      })
   }, [raritySort, distributionData])
 
   const toggleRaritySort = () => {

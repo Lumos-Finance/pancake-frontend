@@ -1,16 +1,18 @@
-import { Button, useWalletModal, ButtonProps } from '@pancakeswap/uikit'
+import React from 'react'
+import { Button, useWalletModal } from '@pancakeswap/uikit'
 import useAuth from 'hooks/useAuth'
 import { useTranslation } from 'contexts/Localization'
-import Trans from './Trans'
+// import "./ConnectWalletButton.css"
 
-const ConnectWalletButton = ({ children, ...props }: ButtonProps) => {
+const ConnectWalletButton = (props) => {
   const { t } = useTranslation()
   const { login, logout } = useAuth()
   const { onPresentConnectModal } = useWalletModal(login, logout, t)
 
   return (
-    <Button onClick={onPresentConnectModal} {...props}>
-      {children || <Trans>Connect Wallet</Trans>}
+  
+    <Button className='boton btn__header' onClick={onPresentConnectModal} {...props}>
+      {t('Connect Wallet')}
     </Button>
   )
 }

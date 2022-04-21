@@ -1,5 +1,4 @@
 import fs from 'fs'
-import os from 'os'
 import { request, gql } from 'graphql-request'
 import BigNumber from 'bignumber.js'
 import { ChainId } from '@pancakeswap/sdk'
@@ -7,10 +6,10 @@ import chunk from 'lodash/chunk'
 import { sub, getUnixTime } from 'date-fns'
 import farmsConfig from '../src/config/constants/farms'
 import type { BlockResponse } from '../src/components/SubgraphHealthIndicator'
-import { BLOCKS_CLIENT } from '../src/config/constants/endpoints'
-import { infoClient } from '../src/utils/graphql'
+import { BLOCKS_CLIENT, INFO_CLIENT } from '../src/config/constants/endpoints'
 
 const BLOCK_SUBGRAPH_ENDPOINT = BLOCKS_CLIENT
+const STREAMING_FAST_ENDPOINT = INFO_CLIENT
 
 interface SingleFarmResponse {
   id: string
@@ -54,7 +53,8 @@ const getBlockAtTimestamp = async (timestamp: number) => {
 
 const getAprsForFarmGroup = async (addresses: string[], blockWeekAgo: number): Promise<AprMap> => {
   try {
-    const { farmsAtLatestBlock, farmsOneWeekAgo } = await infoClient.request<FarmsResponse>(
+    const { farmsAtLatestBlock, farmsOneWeekAgo } = await request<FarmsResponse>(
+      STREAMING_FAST_ENDPOINT,
       gql`
         query farmsBulk($addresses: [String]!, $blockWeekAgo: Int!) {
           farmsAtLatestBlock: pairs(first: 30, where: { id_in: $addresses }) {
@@ -115,7 +115,7 @@ const fetchAndUpdateLPsAPR = async () => {
     allAprs = { ...allAprs, ...aprs }
   }
 
-  fs.writeFile(`src/config/constants/lpAprs.json`, JSON.stringify(allAprs, null, 2) + os.EOL, (err) => {
+  fs.writeFile(`src/config/constants/lpAprs.json`, JSON.stringify(allAprs, null, 2), (err) => {
     if (err) throw err
     console.info(` ✅ - lpAprs.json has been updated!`)
   })

@@ -21,7 +21,6 @@ export interface SerializedToken {
   symbol?: string
   name?: string
   projectLink?: string
-  logoURI?: string
 }
 
 export enum PoolIds {
@@ -66,7 +65,6 @@ export enum PoolCategory {
 
 interface FarmConfigBaseProps {
   pid: number
-  v1pid?: number
   lpSymbol: string
   lpAddresses: Address
   multiplier?: string
@@ -97,7 +95,6 @@ interface PoolConfigBaseProps {
   harvest?: boolean
   isFinished?: boolean
   enableEmergencyWithdraw?: boolean
-  version?: number
 }
 
 export interface SerializedPoolConfig extends PoolConfigBaseProps {

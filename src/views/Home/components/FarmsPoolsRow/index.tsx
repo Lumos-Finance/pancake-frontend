@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback } from 'react'
+import React, { useState, useEffect, useRef, useCallback } from 'react'
 import styled from 'styled-components'
 import { Flex, Box, SwapVertIcon, IconButton } from '@pancakeswap/uikit'
 import { useTranslation } from 'contexts/Localization'
@@ -52,7 +52,11 @@ const FarmsPoolsRow = () => {
 
   const getPoolText = (pool: DeserializedPool) => {
     if (pool.vaultKey) {
-      return vaultPoolConfig[pool.vaultKey].name
+      return t(vaultPoolConfig[pool.vaultKey].name)
+    }
+
+    if (pool.sousId === 0) {
+      return t('Manual CAKE')
     }
 
     return t('Stake %stakingSymbol% - Earn %earningSymbol%', {

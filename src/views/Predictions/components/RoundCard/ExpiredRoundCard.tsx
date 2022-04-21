@@ -1,11 +1,11 @@
+import React from 'react'
 import styled from 'styled-components'
 import { Card, Box, BlockIcon, CardBody } from '@pancakeswap/uikit'
 import { useTranslation } from 'contexts/Localization'
 import { NodeRound, BetPosition, NodeLedger } from 'state/types'
 import { useGetBufferSeconds } from 'state/predictions/hooks'
-import { getHasRoundFailed } from 'state/predictions/helpers'
 import useTheme from 'hooks/useTheme'
-import { getRoundPosition } from '../../helpers'
+import { getHasRoundFailed, getRoundPosition } from '../../helpers'
 import { RoundResult } from '../RoundResult'
 import MultiplierArrow from './MultiplierArrow'
 import CardHeader, { getBorderBackground } from './CardHeader'
@@ -22,7 +22,6 @@ interface ExpiredRoundCardProps {
   hasClaimedDown: boolean
   bullMultiplier: string
   bearMultiplier: string
-  isActive?: boolean
 }
 
 const StyledExpiredRoundCard = styled(Card)`
@@ -43,14 +42,13 @@ const ExpiredRoundCard: React.FC<ExpiredRoundCardProps> = ({
   hasClaimedDown,
   bullMultiplier,
   bearMultiplier,
-  isActive,
 }) => {
   const { t } = useTranslation()
   const { theme } = useTheme()
   const { epoch, lockPrice, closePrice } = round
   const betPosition = getRoundPosition(lockPrice, closePrice)
   const bufferSeconds = useGetBufferSeconds()
-  const hasRoundFailed = getHasRoundFailed(round.oracleCalled, round.closeTimestamp, bufferSeconds)
+  const hasRoundFailed = getHasRoundFailed(round, bufferSeconds)
 
   if (hasRoundFailed) {
     return <CanceledRoundCard round={round} />
@@ -60,17 +58,9 @@ const ExpiredRoundCard: React.FC<ExpiredRoundCardProps> = ({
     return <CalculatingCard round={round} hasEnteredDown={hasEnteredDown} hasEnteredUp={hasEnteredUp} />
   }
 
-  const cardProps = isActive
-    ? {
-        isActive,
-      }
-    : {
-        borderBackground: getBorderBackground(theme, 'expired'),
-      }
-
   return (
     <Box position="relative">
-      <StyledExpiredRoundCard {...cardProps}>
+      <StyledExpiredRoundCard borderBackground={getBorderBackground(theme, 'expired')}>
         <CardHeader
           status="expired"
           icon={<BlockIcon mr="4px" width="21px" color="textDisabled" />}

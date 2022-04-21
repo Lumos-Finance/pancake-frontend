@@ -1,24 +1,19 @@
-import { useRouter } from 'next/router'
-import PageLoader from 'components/Loader/PageLoader'
+import React from 'react'
+import { useParams } from 'react-router'
 import { pancakeBunniesAddress } from '../../constants'
 import IndividualPancakeBunnyPage from './PancakeBunnyPage'
 import IndividualNFTPage from './OneOfAKindNftPage'
 
 const IndividualNFTPageRouter = () => {
-  const router = useRouter()
   // For PancakeBunnies tokenId in url is really bunnyId
-  const { collectionAddress, tokenId } = router.query
+  const { collectionAddress, tokenId } = useParams<{ collectionAddress: string; tokenId: string }>()
 
-  if (router.isFallback) {
-    return <PageLoader />
-  }
-
-  const isPBCollection = String(collectionAddress).toLowerCase() === pancakeBunniesAddress.toLowerCase()
+  const isPBCollection = collectionAddress.toLowerCase() === pancakeBunniesAddress.toLowerCase()
   if (isPBCollection) {
-    return <IndividualPancakeBunnyPage bunnyId={String(tokenId)} />
+    return <IndividualPancakeBunnyPage bunnyId={tokenId} />
   }
 
-  return <IndividualNFTPage collectionAddress={String(collectionAddress)} tokenId={String(tokenId)} />
+  return <IndividualNFTPage collectionAddress={collectionAddress} tokenId={tokenId} />
 }
 
 export default IndividualNFTPageRouter

@@ -1,12 +1,7 @@
-/* eslint-disable no-var */
-/* eslint-disable vars-on-top */
-import { renderHook } from '@testing-library/react-hooks'
-import { parse } from 'querystring'
-import { useCurrency } from 'hooks/Tokens'
-import { createReduxWrapper } from 'testUtils'
+import { parse } from 'qs'
 import { Field } from './actions'
 import { DEFAULT_OUTPUT_CURRENCY } from './constants'
-import { queryParametersToSwapState, useDerivedSwapInfo, useSwapState } from './hooks'
+import { queryParametersToSwapState } from './hooks'
 
 describe('hooks', () => {
   describe('#queryParametersToSwapState', () => {
@@ -14,7 +9,8 @@ describe('hooks', () => {
       expect(
         queryParametersToSwapState(
           parse(
-            'inputCurrency=BNB&outputCurrency=0x6b175474e89094c44da98b954eedeac495271d0f&exactAmount=20.5&exactField=outPUT',
+            '?inputCurrency=BNB&outputCurrency=0x6b175474e89094c44da98b954eedeac495271d0f&exactAmount=20.5&exactField=outPUT',
+            { parseArrays: false, ignoreQueryPrefix: true },
           ),
         ),
       ).toEqual({
@@ -41,7 +37,9 @@ describe('hooks', () => {
     })
 
     test('does not duplicate BNB for invalid output token', () => {
-      expect(queryParametersToSwapState(parse('outputCurrency=invalid'))).toEqual({
+      expect(
+        queryParametersToSwapState(parse('?outputCurrency=invalid', { parseArrays: false, ignoreQueryPrefix: true })),
+      ).toEqual({
         [Field.INPUT]: { currencyId: '' },
         [Field.OUTPUT]: { currencyId: 'BNB' },
         typedValue: '',
@@ -53,7 +51,11 @@ describe('hooks', () => {
     })
 
     test('output BNB only', () => {
-      expect(queryParametersToSwapState(parse('outputCurrency=bnb&exactAmount=20.5'))).toEqual({
+      expect(
+        queryParametersToSwapState(
+          parse('?outputCurrency=bnb&exactAmount=20.5', { parseArrays: false, ignoreQueryPrefix: true }),
+        ),
+      ).toEqual({
         [Field.OUTPUT]: { currencyId: 'BNB' },
         [Field.INPUT]: { currencyId: '' },
         typedValue: '20.5',
@@ -65,7 +67,11 @@ describe('hooks', () => {
     })
 
     test('invalid recipient', () => {
-      expect(queryParametersToSwapState(parse('outputCurrency=BNB&exactAmount=20.5&recipient=abc'))).toEqual({
+      expect(
+        queryParametersToSwapState(
+          parse('?outputCurrency=BNB&exactAmount=20.5&recipient=abc', { parseArrays: false, ignoreQueryPrefix: true }),
+        ),
+      ).toEqual({
         [Field.OUTPUT]: { currencyId: 'BNB' },
         [Field.INPUT]: { currencyId: '' },
         typedValue: '20.5',
@@ -79,7 +85,10 @@ describe('hooks', () => {
     test('valid recipient', () => {
       expect(
         queryParametersToSwapState(
-          parse('outputCurrency=BNB&exactAmount=20.5&recipient=0x0fF2D1eFd7A57B7562b2bf27F3f37899dB27F4a5'),
+          parse('?outputCurrency=BNB&exactAmount=20.5&recipient=0x0fF2D1eFd7A57B7562b2bf27F3f37899dB27F4a5', {
+            parseArrays: false,
+            ignoreQueryPrefix: true,
+          }),
         ),
       ).toEqual({
         [Field.OUTPUT]: { currencyId: 'BNB' },
@@ -92,141 +101,22 @@ describe('hooks', () => {
       })
     })
     test('accepts any recipient', () => {
-      expect(queryParametersToSwapState(parse('outputCurrency=BNB&exactAmount=20.5&recipient=bob.argent.xyz'))).toEqual(
-        {
-          [Field.OUTPUT]: { currencyId: 'BNB' },
-          [Field.INPUT]: { currencyId: '' },
-          typedValue: '20.5',
-          independentField: Field.INPUT,
-          pairDataById: {},
-          derivedPairDataById: {},
-          recipient: 'bob.argent.xyz',
-        },
-      )
+      expect(
+        queryParametersToSwapState(
+          parse('?outputCurrency=BNB&exactAmount=20.5&recipient=bob.argent.xyz', {
+            parseArrays: false,
+            ignoreQueryPrefix: true,
+          }),
+        ),
+      ).toEqual({
+        [Field.OUTPUT]: { currencyId: 'BNB' },
+        [Field.INPUT]: { currencyId: '' },
+        typedValue: '20.5',
+        independentField: Field.INPUT,
+        pairDataById: {},
+        derivedPairDataById: {},
+        recipient: 'bob.argent.xyz',
+      })
     })
-  })
-})
-
-// weird bug on jest Reference Error, must use `var` here
-var mockUseActiveWeb3React: jest.Mock
-
-jest.mock('../../hooks/useActiveWeb3React', () => {
-  mockUseActiveWeb3React = jest.fn().mockReturnValue({})
-  return {
-    __esModule: true,
-    default: mockUseActiveWeb3React,
-  }
-})
-
-describe('#useDerivedSwapInfo', () => {
-  it('should show Login Error', async () => {
-    const { result, rerender } = renderHook(
-      () => {
-        const {
-          independentField,
-          typedValue,
-          recipient,
-          [Field.INPUT]: { currencyId: inputCurrencyId },
-          [Field.OUTPUT]: { currencyId: outputCurrencyId },
-        } = useSwapState()
-        const inputCurrency = useCurrency(inputCurrencyId)
-        const outputCurrency = useCurrency(outputCurrencyId)
-        return useDerivedSwapInfo(
-          independentField,
-          typedValue,
-          inputCurrencyId,
-          inputCurrency,
-          outputCurrencyId,
-          outputCurrency,
-          recipient,
-        )
-      },
-      { wrapper: createReduxWrapper() },
-    )
-    expect(result.current.inputError).toBe('Connect Wallet')
-
-    mockUseActiveWeb3React.mockReturnValue({ account: '0x33edFBc4934baACc78f4d317bc07639119dd3e78' })
-    rerender()
-
-    expect(result.current.inputError).toBe('Enter an amount')
-    mockUseActiveWeb3React.mockClear()
-  })
-
-  it('should show [Enter a recipient] Error', async () => {
-    mockUseActiveWeb3React.mockReturnValue({ account: '0x33edFBc4934baACc78f4d317bc07639119dd3e78' })
-    const { result, rerender } = renderHook(
-      () => {
-        const {
-          independentField,
-          typedValue,
-          recipient,
-          [Field.INPUT]: { currencyId: inputCurrencyId },
-          [Field.OUTPUT]: { currencyId: outputCurrencyId },
-        } = useSwapState()
-        const inputCurrency = useCurrency(inputCurrencyId)
-        const outputCurrency = useCurrency(outputCurrencyId)
-        return useDerivedSwapInfo(
-          independentField,
-          typedValue,
-          inputCurrencyId,
-          inputCurrency,
-          outputCurrencyId,
-          outputCurrency,
-          recipient,
-        )
-      },
-      {
-        wrapper: createReduxWrapper({
-          swap: {
-            typedValue: '0.11',
-            [Field.INPUT]: { currencyId: 'BNB' },
-            [Field.OUTPUT]: { currencyId: 'BNB' },
-          },
-        }),
-      },
-    )
-
-    rerender()
-
-    expect(result.current.inputError).toBe('Enter a recipient')
-    mockUseActiveWeb3React.mockClear()
-  })
-
-  it('should return undefined when no pair', async () => {
-    const { result } = renderHook(
-      () => {
-        const {
-          independentField,
-          typedValue,
-          recipient,
-          [Field.INPUT]: { currencyId: inputCurrencyId },
-          [Field.OUTPUT]: { currencyId: outputCurrencyId },
-        } = useSwapState()
-        const inputCurrency = useCurrency(inputCurrencyId)
-        const outputCurrency = useCurrency(outputCurrencyId)
-        const swapInfo = useDerivedSwapInfo(
-          independentField,
-          typedValue,
-          inputCurrencyId,
-          inputCurrency,
-          outputCurrencyId,
-          outputCurrency,
-          recipient,
-        )
-        return {
-          swapInfo,
-        }
-      },
-      {
-        wrapper: createReduxWrapper(),
-      },
-    )
-
-    expect(result.current.swapInfo.currencies.INPUT).toBeUndefined()
-    expect(result.current.swapInfo.currencies.OUTPUT).toBeUndefined()
-    expect(result.current.swapInfo.currencyBalances.INPUT).toBeUndefined()
-    expect(result.current.swapInfo.currencyBalances.OUTPUT).toBeUndefined()
-    expect(result.current.swapInfo.v2Trade).toBeUndefined()
-    expect(result.current.swapInfo.parsedAmount).toBeUndefined()
   })
 })

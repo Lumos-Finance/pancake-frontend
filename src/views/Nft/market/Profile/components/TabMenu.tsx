@@ -1,10 +1,9 @@
-import { useState, useEffect } from 'react'
+import React, { useState, useEffect } from 'react'
 import { useTranslation } from 'contexts/Localization'
-import { NextLinkFromReactRouter } from 'components/NextLink'
+import { Link as RouterLink, useLocation, useParams } from 'react-router-dom'
 import styled from 'styled-components'
 import { Flex } from '@pancakeswap/uikit'
 import { nftsBaseUrl } from 'views/Nft/market/constants'
-import { useRouter } from 'next/router'
 
 const Tab = styled.button<{ $active: boolean }>`
   display: inline-flex;
@@ -26,8 +25,8 @@ const Tab = styled.button<{ $active: boolean }>`
 
 const TabMenu = () => {
   const { t } = useTranslation()
-  const { pathname, query } = useRouter()
-  const { accountAddress } = query
+  const { accountAddress } = useParams<{ accountAddress: string }>()
+  const { pathname } = useLocation()
   const [achievementsActive, setIsAchievementsActive] = useState(pathname.includes('achievements'))
 
   useEffect(() => {
@@ -39,7 +38,7 @@ const TabMenu = () => {
       <Tab
         onClick={() => setIsAchievementsActive(false)}
         $active={!achievementsActive}
-        as={NextLinkFromReactRouter}
+        as={RouterLink}
         to={`${nftsBaseUrl}/profile/${accountAddress}`}
       >
         NFTs
@@ -47,7 +46,7 @@ const TabMenu = () => {
       <Tab
         onClick={() => setIsAchievementsActive(true)}
         $active={achievementsActive}
-        as={NextLinkFromReactRouter}
+        as={RouterLink}
         to={`${nftsBaseUrl}/profile/${accountAddress}/achievements`}
       >
         {t('Achievements')}

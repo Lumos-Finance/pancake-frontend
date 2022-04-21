@@ -1,15 +1,16 @@
-import { useMemo, useRef, useEffect } from 'react'
+import React, { useMemo, useRef, useEffect } from 'react'
 import styled from 'styled-components'
 import { Text, Flex, Box, Card } from '@pancakeswap/uikit'
-import { NextLinkFromReactRouter } from 'components/NextLink'
+import { Link } from 'react-router-dom'
 import { useAllTokenData } from 'state/info/hooks'
 import { TokenData } from 'state/info/types'
 import { CurrencyLogo } from 'views/Info/components/CurrencyLogo'
-import { formatAmount } from 'utils/formatInfoNumbers'
+import { formatAmount } from 'views/Info/utils/formatInfoNumbers'
 import Percent from 'views/Info/components/Percent'
 import { useTranslation } from 'contexts/Localization'
+import "./styles.css"
 
-const CardWrapper = styled(NextLinkFromReactRouter)`
+const CardWrapper = styled(Link)`
   display: inline-block;
   min-width: 190px;
   margin-left: 16px;
@@ -38,7 +39,7 @@ export const ScrollableRow = styled.div`
 const DataCard = ({ tokenData }: { tokenData: TokenData }) => {
   return (
     <CardWrapper to={`/info/token/${tokenData.address}`}>
-      <TopMoverCard>
+      <TopMoverCard  >
         <Flex>
           <Box width="32px" height="32px">
             {/* wrapped in a box because of alignment issues between img and svg */}
@@ -100,8 +101,8 @@ const TopTokenMovers: React.FC = () => {
   }
 
   return (
-    <Card my="16px">
-      <Text ml="16px" mt="8px">
+    <div className='glass mt-16' >
+      <Text className = "text" ml="16px" mt="8px">
         {t('Top Movers')}
       </Text>
       <ScrollableRow ref={increaseRef}>
@@ -109,7 +110,7 @@ const TopTokenMovers: React.FC = () => {
           entry.data ? <DataCard key={`top-card-token-${entry.data?.address}`} tokenData={entry.data} /> : null,
         )}
       </ScrollableRow>
-    </Card>
+    </div>
   )
 }
 

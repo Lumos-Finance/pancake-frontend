@@ -1,3 +1,4 @@
+import React from 'react'
 import styled from 'styled-components'
 
 const StyledDatePickerPortal = styled.div`
@@ -101,26 +102,6 @@ const StyledDatePickerPortal = styled.div`
     li.react-datepicker__time-list-item {
     height: auto;
     padding: 8px;
-  }
-
-  .react-datepicker__time-container
-    .react-datepicker__time
-    .react-datepicker__time-box
-    ul.react-datepicker__time-list
-    li.react-datepicker__time-list-item {
-    background-color: ${({ theme }) => theme.card.background};
-
-    &:hover {
-      background-color: ${({ theme }) => theme.colors.cardBorder};
-    }
-  }
-
-  .react-datepicker__time-container
-    .react-datepicker__time
-    .react-datepicker__time-box
-    ul.react-datepicker__time-list
-    li.react-datepicker__time-list-item--selected {
-    color: ${({ theme }) => theme.colors.text};
   }
 `
 

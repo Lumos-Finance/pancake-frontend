@@ -1,12 +1,13 @@
+import React from 'react'
 import { Modal, Flex, Text } from '@pancakeswap/uikit'
-import { BigNumber } from '@ethersproject/bignumber'
+import { ethers } from 'ethers'
 import { formatUnits } from '@ethersproject/units'
+import { useAppDispatch } from 'state'
 import { useTranslation } from 'contexts/Localization'
 import { useCake, useProfileContract } from 'hooks/useContract'
 import useApproveConfirmTransaction from 'hooks/useApproveConfirmTransaction'
-import { useProfile } from 'state/profile/hooks'
+import { fetchProfile } from 'state/profile'
 import useToast from 'hooks/useToast'
-import { requiresApproval } from 'utils/requiresApproval'
 import { useCallWithGasPrice } from 'hooks/useCallWithGasPrice'
 import { ToastDescriptionWithTx } from 'components/Toast'
 import ApproveConfirmButtons from 'components/ApproveConfirmButtons'
@@ -18,8 +19,8 @@ interface Props {
   selectedNft: State['selectedNft']
   account: string
   teamId: number
-  minimumCakeRequired: BigNumber
-  allowance: BigNumber
+  minimumCakeRequired: ethers.BigNumber
+  allowance: ethers.BigNumber
   onDismiss?: () => void
 }
 
@@ -33,18 +34,23 @@ const ConfirmProfileCreationModal: React.FC<Props> = ({
 }) => {
   const { t } = useTranslation()
   const profileContract = useProfileContract()
-  const { refresh: refreshProfile } = useProfile()
+  const dispatch = useAppDispatch()
   const { toastSuccess } = useToast()
-  const { reader: cakeContractReader, signer: cakeContractApprover } = useCake()
+  const cakeContract = useCake()
   const { callWithGasPrice } = useCallWithGasPrice()
 
   const { isApproving, isApproved, isConfirmed, isConfirming, handleApprove, handleConfirm } =
     useApproveConfirmTransaction({
       onRequiresApproval: async () => {
-        return requiresApproval(cakeContractReader, account, profileContract.address, minimumCakeRequired)
+        try {
+          const response = await cakeContract.allowance(account, profileContract.address)
+          return response.gte(minimumCakeRequired)
+        } catch (error) {
+          return false
+        }
       },
       onApprove: () => {
-        return callWithGasPrice(cakeContractApprover, 'approve', [profileContract.address, allowance.toJSON()])
+        return callWithGasPrice(cakeContract, 'approve', [profileContract.address, allowance.toJSON()])
       },
       onConfirm: () => {
         return callWithGasPrice(profileContract, 'createProfile', [
@@ -54,7 +60,7 @@ const ConfirmProfileCreationModal: React.FC<Props> = ({
         ])
       },
       onSuccess: async ({ receipt }) => {
-        refreshProfile()
+        await dispatch(fetchProfile(account))
         onDismiss()
         toastSuccess(t('Profile created!'), <ToastDescriptionWithTx txHash={receipt.transactionHash} />)
       },

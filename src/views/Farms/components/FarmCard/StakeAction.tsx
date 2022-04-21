@@ -1,25 +1,33 @@
+import React, { useCallback } from 'react'
 import { useWeb3React } from '@web3-react/core'
 import styled from 'styled-components'
-import { Button, Flex, IconButton, AddIcon, MinusIcon, useModal } from '@pancakeswap/uikit'
+import BigNumber from 'bignumber.js'
+import { Button, Flex, Heading, IconButton, AddIcon, MinusIcon, useModal } from '@pancakeswap/uikit'
 import useToast from 'hooks/useToast'
-import useCatchTxError from 'hooks/useCatchTxError'
+import { useLocation } from 'react-router-dom'
+import Balance from 'components/Balance'
 import { ToastDescriptionWithTx } from 'components/Toast'
 import { useTranslation } from 'contexts/Localization'
 import { useAppDispatch } from 'state'
 import { fetchFarmUserDataAsync } from 'state/farms'
-import { useRouter } from 'next/router'
-import { useLpTokenPrice, useFarmUser, usePriceCakeBusd } from 'state/farms/hooks'
+import { useLpTokenPrice } from 'state/farms/hooks'
+import { getBalanceAmount, getBalanceNumber } from 'utils/formatBalance'
 import DepositModal from '../DepositModal'
 import WithdrawModal from '../WithdrawModal'
 import useUnstakeFarms from '../../hooks/useUnstakeFarms'
 import useStakeFarms from '../../hooks/useStakeFarms'
-import { FarmWithStakedValue } from '../types'
-import StakedLP from '../StakedLP'
 
-interface FarmCardActionsProps extends FarmWithStakedValue {
-  lpLabel?: string
-  addLiquidityUrl?: string
+interface FarmCardActionsProps {
+  stakedBalance?: BigNumber
+  tokenBalance?: BigNumber
+  tokenName?: string
+  pid?: number
+  multiplier?: string
+  apr?: number
   displayApr?: string
+  addLiquidityUrl?: string
+  cakePrice?: BigNumber
+  lpLabel?: string
 }
 
 const IconButtonWrapper = styled.div`
@@ -30,67 +38,95 @@ const IconButtonWrapper = styled.div`
 `
 
 const StakeAction: React.FC<FarmCardActionsProps> = ({
-  quoteToken,
-  token,
-  lpSymbol,
+  stakedBalance,
+  tokenBalance,
+  tokenName,
   pid,
   multiplier,
   apr,
   displayApr,
   addLiquidityUrl,
+  cakePrice,
   lpLabel,
-  lpTotalSupply,
-  tokenAmountTotal,
-  quoteTokenAmountTotal,
 }) => {
   const { t } = useTranslation()
   const { onStake } = useStakeFarms(pid)
   const { onUnstake } = useUnstakeFarms(pid)
-  const { tokenBalance, stakedBalance } = useFarmUser(pid)
-  const cakePrice = usePriceCakeBusd()
-  const router = useRouter()
+  const location = useLocation()
   const dispatch = useAppDispatch()
   const { account } = useWeb3React()
-  const lpPrice = useLpTokenPrice(lpSymbol)
-  const { toastSuccess } = useToast()
-  const { fetchWithCatchTxError } = useCatchTxError()
+  const lpPrice = useLpTokenPrice(tokenName)
+  const { toastSuccess, toastError } = useToast()
 
   const handleStake = async (amount: string) => {
-    const receipt = await fetchWithCatchTxError(() => {
-      return onStake(amount)
-    })
-    if (receipt?.status) {
-      toastSuccess(
-        `${t('Staked')}!`,
-        <ToastDescriptionWithTx txHash={receipt.transactionHash}>
-          {t('Your funds have been staked in the farm')}
-        </ToastDescriptionWithTx>,
-      )
-      dispatch(fetchFarmUserDataAsync({ account, pids: [pid] }))
-    }
+    await onStake(
+      amount,
+      (tx) => {
+        toastSuccess(`${t('Transaction Submitted')}!`, <ToastDescriptionWithTx txHash={tx.hash} />)
+      },
+      (receipt) => {
+        toastSuccess(
+          `${t('Staked')}!`,
+          <ToastDescriptionWithTx txHash={receipt.transactionHash}>
+            {t('Your funds have been staked in the farm')}
+          </ToastDescriptionWithTx>,
+        )
+      },
+      (receipt) => {
+        toastError(
+          t('Error'),
+          <ToastDescriptionWithTx txHash={receipt.transactionHash}>
+            {t('Please try again. Confirm the transaction and make sure you are paying enough gas!')}
+          </ToastDescriptionWithTx>,
+        )
+      },
+    )
+    dispatch(fetchFarmUserDataAsync({ account, pids: [pid] }))
   }
 
   const handleUnstake = async (amount: string) => {
-    const receipt = await fetchWithCatchTxError(() => {
-      return onUnstake(amount)
-    })
-    if (receipt?.status) {
-      toastSuccess(
-        `${t('Unstaked')}!`,
-        <ToastDescriptionWithTx txHash={receipt.transactionHash}>
-          {t('Your earnings have also been harvested to your wallet')}
-        </ToastDescriptionWithTx>,
-      )
-      dispatch(fetchFarmUserDataAsync({ account, pids: [pid] }))
-    }
+    await onUnstake(
+      amount,
+      (tx) => {
+        toastSuccess(`${t('Transaction Submitted')}!`, <ToastDescriptionWithTx txHash={tx.hash} />)
+      },
+      (receipt) => {
+        toastSuccess(
+          `${t('Unstaked')}!`,
+          <ToastDescriptionWithTx txHash={receipt.transactionHash}>
+            {t('Your earnings have also been harvested to your wallet')}
+          </ToastDescriptionWithTx>,
+        )
+      },
+      (receipt) => {
+        toastError(
+          t('Error'),
+          <ToastDescriptionWithTx txHash={receipt.transactionHash}>
+            {t('Please try again. Confirm the transaction and make sure you are paying enough gas!')}
+          </ToastDescriptionWithTx>,
+        )
+      },
+    )
+    dispatch(fetchFarmUserDataAsync({ account, pids: [pid] }))
   }
+
+  const displayBalance = useCallback(() => {
+    const stakedBalanceBigNumber = getBalanceAmount(stakedBalance)
+    if (stakedBalanceBigNumber.gt(0) && stakedBalanceBigNumber.lt(0.0000001)) {
+      return '<0.0000001'
+    }
+    if (stakedBalanceBigNumber.gt(0)) {
+      return stakedBalanceBigNumber.toFixed(8, BigNumber.ROUND_DOWN)
+    }
+    return stakedBalanceBigNumber.toFixed(3, BigNumber.ROUND_DOWN)
+  }, [stakedBalance])
 
   const [onPresentDeposit] = useModal(
     <DepositModal
       max={tokenBalance}
       stakedBalance={stakedBalance}
       onConfirm={handleStake}
-      tokenName={lpSymbol}
+      tokenName={tokenName}
       multiplier={multiplier}
       lpPrice={lpPrice}
       lpLabel={lpLabel}
@@ -101,14 +137,14 @@ const StakeAction: React.FC<FarmCardActionsProps> = ({
     />,
   )
   const [onPresentWithdraw] = useModal(
-    <WithdrawModal max={stakedBalance} onConfirm={handleUnstake} tokenName={lpSymbol} />,
+    <WithdrawModal max={stakedBalance} onConfirm={handleUnstake} tokenName={tokenName} />,
   )
 
   const renderStakingButtons = () => {
     return stakedBalance.eq(0) ? (
       <Button
         onClick={onPresentDeposit}
-        disabled={['history', 'archived'].some((item) => router.pathname.includes(item))}
+        disabled={['history', 'archived'].some((item) => location.pathname.includes(item))}
       >
         {t('Stake LP')}
       </Button>
@@ -120,7 +156,7 @@ const StakeAction: React.FC<FarmCardActionsProps> = ({
         <IconButton
           variant="tertiary"
           onClick={onPresentDeposit}
-          disabled={['history', 'archived'].some((item) => router.pathname.includes(item))}
+          disabled={['history', 'archived'].some((item) => location.pathname.includes(item))}
         >
           <AddIcon color="primary" width="14px" />
         </IconButton>
@@ -130,15 +166,19 @@ const StakeAction: React.FC<FarmCardActionsProps> = ({
 
   return (
     <Flex justifyContent="space-between" alignItems="center">
-      <StakedLP
-        stakedBalance={stakedBalance}
-        lpSymbol={lpSymbol}
-        quoteTokenSymbol={quoteToken.symbol}
-        tokenSymbol={token.symbol}
-        lpTotalSupply={lpTotalSupply}
-        tokenAmountTotal={tokenAmountTotal}
-        quoteTokenAmountTotal={quoteTokenAmountTotal}
-      />
+      <Flex flexDirection="column" alignItems="flex-start">
+        <Heading color={stakedBalance.eq(0) ? 'textDisabled' : 'text'}>{displayBalance()}</Heading>
+        {stakedBalance.gt(0) && lpPrice.gt(0) && (
+          <Balance
+            fontSize="12px"
+            color="textSubtle"
+            decimals={2}
+            value={getBalanceNumber(lpPrice.times(stakedBalance))}
+            unit=" USD"
+            prefix="~"
+          />
+        )}
+      </Flex>
       {renderStakingButtons()}
     </Flex>
   )

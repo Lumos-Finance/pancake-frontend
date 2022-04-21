@@ -1,3 +1,4 @@
+import React from 'react'
 import styled from 'styled-components'
 import { useWeb3React } from '@web3-react/core'
 import { Price } from '@pancakeswap/sdk'
@@ -28,24 +29,21 @@ interface RowProps {
   nft: NftToken
   bnbBusdPrice: Price
   account: string
-  onSuccessSale: () => void
 }
 
-const Row: React.FC<RowProps> = ({ t, nft, bnbBusdPrice, account, onSuccessSale }) => {
-  const priceInUsd = multiplyPriceByAmount(bnbBusdPrice, parseFloat(nft?.marketData?.currentAskPrice))
+const Row: React.FC<RowProps> = ({ t, nft, bnbBusdPrice, account }) => {
+  const priceInUsd = multiplyPriceByAmount(bnbBusdPrice, parseFloat(nft.marketData.currentAskPrice))
 
   const ownNft = account ? nft.marketData.currentSeller === account.toLowerCase() : false
   const [onPresentBuyModal] = useModal(<BuyModal nftToBuy={nft} />)
-  const [onPresentAdjustPriceModal] = useModal(
-    <SellModal variant="edit" nftToSell={nft} onSuccessSale={onSuccessSale} />,
-  )
+  const [onPresentAdjustPriceModal] = useModal(<SellModal variant="edit" nftToSell={nft} />)
 
   return (
     <>
       <Box pl="24px">
         <Flex justifySelf="flex-start" alignItems="center" width="max-content">
           <BinanceIcon width="24px" height="24px" mr="8px" />
-          <Text bold>{formatNumber(parseFloat(nft?.marketData?.currentAskPrice), 0, 5)}</Text>
+          <Text bold>{formatNumber(parseFloat(nft.marketData.currentAskPrice), 0, 5)}</Text>
         </Flex>
         {bnbBusdPrice ? (
           <Text fontSize="12px" color="textSubtle">
@@ -62,23 +60,11 @@ const Row: React.FC<RowProps> = ({ t, nft, bnbBusdPrice, account, onSuccessSale 
       </Box>
       <ButtonContainer>
         {ownNft ? (
-          <Button
-            disabled={!nft?.marketData?.isTradable}
-            scale="sm"
-            variant="danger"
-            maxWidth="128px"
-            onClick={onPresentAdjustPriceModal}
-          >
+          <Button scale="sm" variant="danger" maxWidth="128px" onClick={onPresentAdjustPriceModal}>
             {t('Edit')}
           </Button>
         ) : (
-          <Button
-            disabled={!nft?.marketData?.isTradable}
-            scale="sm"
-            variant="secondary"
-            maxWidth="128px"
-            onClick={onPresentBuyModal}
-          >
+          <Button scale="sm" variant="secondary" maxWidth="128px" onClick={onPresentBuyModal}>
             {t('Buy')}
           </Button>
         )}
@@ -89,24 +75,16 @@ const Row: React.FC<RowProps> = ({ t, nft, bnbBusdPrice, account, onSuccessSale 
 
 interface ForSaleTableRowsProps {
   nftsForSale: NftToken[]
-  onSuccessSale: () => void
 }
 
-const ForSaleTableRow: React.FC<ForSaleTableRowsProps> = ({ nftsForSale, onSuccessSale }) => {
+const ForSaleTableRow: React.FC<ForSaleTableRowsProps> = ({ nftsForSale }) => {
   const { account } = useWeb3React()
   const { t } = useTranslation()
   const bnbBusdPrice = useBNBBusdPrice()
   return (
     <OwnersTableRow>
       {nftsForSale.map((nft) => (
-        <Row
-          key={nft.tokenId}
-          t={t}
-          nft={nft}
-          bnbBusdPrice={bnbBusdPrice}
-          account={account}
-          onSuccessSale={onSuccessSale}
-        />
+        <Row key={nft.tokenId} t={t} nft={nft} bnbBusdPrice={bnbBusdPrice} account={account} />
       ))}
     </OwnersTableRow>
   )
